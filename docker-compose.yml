@@ -1,0 +1,81 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Modern Modular LMS — Local Development Stack
+#
+# Services:
+#   postgres   — PostgreSQL 16 database
+#   lms-api    — ASP.NET Core Web API  (http://localhost:5001)
+#   lms-frontend — Angular dev server   (http://localhost:4200)
+#
+# Usage:
+#   Start everything:   docker-compose up
+#   Start in background: docker-compose up -d
+#   Stop everything:    docker-compose down
+#   Rebuild after code change: docker-compose up --build
+#   View logs:          docker-compose logs -f lms-api
+#   Reset database:     docker-compose down -v  ← WARNING: deletes all data
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: lms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lms_db
+      POSTGRES_USER: lms_user
+      POSTGRES_PASSWORD: lms_password
+    ports:
+      - "5432:5432"   # Exposed so you can connect via DBeaver or pgAdmin locally
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lms_user -d lms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── ASP.NET Core API ───────────────────────────────────────────────────────
+  lms-api:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: lms-api
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=lms_db;Username=lms_user;Password=lms_password"
+      Jwt__Secret: "DEV_SECRET_CHANGE_IN_PRODUCTION_MUST_BE_32_CHARS_MIN"
+      Jwt__Issuer: "lms-api"
+      Jwt__Audience: "lms-frontend"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads   # Persist uploaded files across container restarts
+
+  # ─── Angular Frontend ────────────────────────────────────────────────────────
+  lms-frontend:
+    build:
+      context: ../lms-frontend
+      dockerfile: docker/frontend.Dockerfile
+    container_name: lms-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    environment:
+      - CHOKIDAR_USEPOLLING=true   # Required for hot reload inside Docker on some OSes
+    volumes:
+      - ../lms-frontend/src:/app/src:delegated   # Hot reload — changes reflect instantly
+      - /app/node_modules                          # Don't override container's node_modules
+    depends_on:
+      - lms-api
+
+volumes:
+  postgres_data:
+    driver: local

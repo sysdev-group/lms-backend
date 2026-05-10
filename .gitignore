@@ -1,0 +1,28 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.swp
+
+## EF Core migrations (keep the Migrations folder, ignore runtime files)
+*.db
+*.db-shm
+*.db-wal
+
+## Environment / secrets — NEVER commit these
+.env
+appsettings.Production.json
+appsettings.Staging.json
+
+## Uploads (local dev files — not committed)
+uploads/
+
+## Rider / VS
+.idea/
+*.DotSettings.user
+
+## OS
+.DS_Store
+Thumbs.db
