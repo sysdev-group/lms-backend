@@ -44,3 +44,11 @@ public class UserQueryParams
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
+
+/// <summary>Result of a bulk CSV import operation.</summary>
+public class BulkImportResult
+{
+    public int Created { get; set; }
+    public int Skipped { get; set; }
+    public List<string> Errors { get; set; } = new();
+}

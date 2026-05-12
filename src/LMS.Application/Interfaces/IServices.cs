@@ -24,6 +24,13 @@ public interface IUserService
     Task<UserDto> UpdateUserAsync(Guid id, UpdateUserRequest request);
     Task DeactivateUserAsync(Guid id);
     Task TriggerPasswordResetAsync(Guid userId); // Admin-initiated reset
+
+    /// <summary>
+    /// Imports users in bulk from a CSV stream.
+    /// Expected columns (with header): FirstName,LastName,Email,Role.
+    /// Rows with duplicate emails are skipped rather than rejected.
+    /// </summary>
+    Task<BulkImportResult> BulkImportAsync(Stream csvStream);
 }
 
 // ─── COURSE SERVICE ───────────────────────────────────────────────────────────
