@@ -12,6 +12,7 @@ public class Assignment
     public DateTime Deadline { get; set; }
     public int MaxMarks { get; set; }
     public bool AllowResubmission { get; set; } = false;
+    public bool AllowLateSubmission { get; set; } = false;
     public bool TurnitinEnabled { get; set; } = false;
     public bool AllowStudentsViewReport { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

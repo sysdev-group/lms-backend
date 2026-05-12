@@ -74,26 +74,6 @@ public class CourseService : ICourseService
         => throw new NotImplementedException("TODO: Query Enrollments where CourseId = id and Status = Active.");
 }
 
-// ─── ASSIGNMENT SERVICE ───────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.5 — Assignment Module</summary>
-public class AssignmentService : IAssignmentService
-{
-    public Task<List<AssignmentDto>> GetByCourseAsync(Guid courseId)
-        => throw new NotImplementedException("TODO: Query Assignments by CourseId, include submission counts.");
-
-    public Task<AssignmentDto> GetByIdAsync(Guid id)
-        => throw new NotImplementedException("TODO: Include course info in query.");
-
-    public Task<AssignmentDto> CreateAssignmentAsync(CreateAssignmentRequest request, Guid lecturerId)
-        => throw new NotImplementedException("TODO: Verify lecturer owns the course before creating.");
-
-    public Task<AssignmentDto> UpdateAssignmentAsync(Guid id, UpdateAssignmentRequest request)
-        => throw new NotImplementedException("TODO: Prevent deadline changes after first submission exists.");
-
-    public Task DeleteAssignmentAsync(Guid id)
-        => throw new NotImplementedException("TODO: Only allow delete if no submissions exist.");
-}
-
 // ─── SUBMISSION SERVICE ───────────────────────────────────────────────────────
 /// <summary>Docs: Section 7.5 — Assignment Module (Submissions)</summary>
 public class SubmissionService : ISubmissionService
