@@ -205,18 +205,3 @@ public class AuditService : IAuditService
         Guid? userId, DateTime? from, DateTime? to, int page, int pageSize)
         => throw new NotImplementedException("TODO: Query AuditLogs with filters, paginate results.");
 }
-
-// ─── FILE SERVICE ─────────────────────────────────────────────────────────────
-/// <summary>Docs: Section 21 — File Upload & Storage Architecture</summary>
-public class FileService : IFileService
-{
-    public Task<Guid> UploadAsync(Stream fileStream, string originalName, string mimeType,
-        string relatedEntity, Guid entityId, Guid uploadedById)
-        => throw new NotImplementedException("TODO: Validate type/size, sanitise filename, store file, create FileRecord.");
-
-    public Task<(Stream stream, string fileName, string mimeType)> DownloadAsync(Guid fileId, Guid requestingUserId)
-        => throw new NotImplementedException("TODO: Verify access rights before streaming file. See Section 21.7.");
-
-    public Task DeleteAsync(Guid fileId, Guid requestingUserId)
-        => throw new NotImplementedException("TODO: Admin or file owner only. Soft delete metadata, remove file.");
-}
