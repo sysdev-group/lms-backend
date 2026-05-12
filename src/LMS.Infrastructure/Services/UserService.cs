@@ -34,11 +34,11 @@ public class UserService : IUserService
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var term = query.Search.ToLowerInvariant();
+            var term = $"%{query.Search}%";
             q = q.Where(u =>
-                u.Email.ToLower().Contains(term) ||
-                u.FirstName.ToLower().Contains(term) ||
-                u.LastName.ToLower().Contains(term));
+                EF.Functions.ILike(u.Email, term) ||
+                EF.Functions.ILike(u.FirstName, term) ||
+                EF.Functions.ILike(u.LastName, term));
         }
 
         if (query.Role.HasValue)
@@ -102,7 +102,14 @@ public class UserService : IUserService
         };
 
         _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException($"A user with email '{email}' already exists.");
+        }
 
         // TODO: Send welcome email with password-reset link via IEmailService. See Section 22.
         return MapToDto(user);
@@ -139,7 +146,14 @@ public class UserService : IUserService
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException($"Email '{user.Email}' is already in use.");
+        }
         return MapToDto(user);
     }
 
@@ -181,20 +195,31 @@ public class UserService : IUserService
     /// </summary>
     public async Task<BulkImportResult> BulkImportAsync(Stream csvStream)
     {
+        const int MaxRows = 1_000;
+
         var result = new BulkImportResult();
         var knownEmails = (await _db.Users.Select(u => u.Email).ToListAsync()).ToHashSet();
         var usersToAdd = new List<User>();
 
-        using var reader = new StreamReader(csvStream);
+        // leaveOpen: true — caller owns the stream lifetime
+        using var reader = new StreamReader(csvStream, System.Text.Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true, bufferSize: -1, leaveOpen: true);
         await reader.ReadLineAsync(); // skip header
 
         string? line;
         var lineNumber = 1;
+        var rowsRead = 0;
 
         while ((line = await reader.ReadLineAsync()) is not null)
         {
             lineNumber++;
             if (string.IsNullOrWhiteSpace(line)) continue;
+
+            if (++rowsRead > MaxRows)
+            {
+                result.Errors.Add($"Import aborted at line {lineNumber}: file exceeds the {MaxRows}-row limit.");
+                break;
+            }
 
             var cols = line.Split(',');
             if (cols.Length < 4)
@@ -211,6 +236,12 @@ public class UserService : IUserService
             if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) || string.IsNullOrEmpty(email))
             {
                 result.Errors.Add($"Line {lineNumber}: FirstName, LastName, and Email are required.");
+                continue;
+            }
+
+            if (!IsValidEmail(email))
+            {
+                result.Errors.Add($"Line {lineNumber}: '{email}' is not a valid email address.");
                 continue;
             }
 
@@ -239,14 +270,13 @@ public class UserService : IUserService
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             });
-
-            result.Created++;
         }
 
         if (usersToAdd.Count > 0)
         {
             _db.Users.AddRange(usersToAdd);
             await _db.SaveChangesAsync();
+            result.Created = usersToAdd.Count; // set only after confirmed DB write
         }
 
         return result;
@@ -265,6 +295,12 @@ public class UserService : IUserService
         CreatedAt = u.CreatedAt,
         LastLoginAt = u.LastLoginAt
     };
+
+    private static bool IsValidEmail(string email)
+    {
+        try { _ = new System.Net.Mail.MailAddress(email); return true; }
+        catch { return false; }
+    }
 
     private static string GenerateTemporaryPassword()
     {
