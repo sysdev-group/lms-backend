@@ -101,6 +101,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         // ── Worked example ────────────────────────────────────────────────────
         services.AddScoped<IAuthService, AuthService>();
 
