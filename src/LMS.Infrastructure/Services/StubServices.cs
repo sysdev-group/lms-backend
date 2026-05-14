@@ -28,28 +28,6 @@ using LMS.Application.Interfaces;
 
 namespace LMS.Infrastructure.Services;
 
-// ─── COURSE SERVICE ───────────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.4 — Course Module</summary>
-public class CourseService : ICourseService
-{
-    public Task<PaginatedResult<CourseDto>> GetCoursesAsync(CourseQueryParams query, Guid requestingUserId, string role)
-        => throw new NotImplementedException("TODO: Filter by role — Students see enrolled only, Lecturers see their own.");
-
-    public Task<CourseDto> GetByIdAsync(Guid id)
-        => throw new NotImplementedException("TODO: Include Lecturer and Semester in query.");
-
-    public Task<CourseDto> CreateCourseAsync(CreateCourseRequest request)
-        => throw new NotImplementedException("TODO: Validate LecturerId and SemesterId exist, create course.");
-
-    public Task<CourseDto> UpdateCourseAsync(Guid id, UpdateCourseRequest request)
-        => throw new NotImplementedException("TODO: Partial update — only update non-null fields.");
-
-    public Task ArchiveCourseAsync(Guid id)
-        => throw new NotImplementedException("TODO: Set IsArchived = true. Archived courses are read-only for students.");
-
-    public Task<List<UserDto>> GetEnrolledStudentsAsync(Guid courseId)
-        => throw new NotImplementedException("TODO: Query Enrollments where CourseId = id and Status = Active.");
-}
 
 // ─── ASSIGNMENT SERVICE ───────────────────────────────────────────────────────
 /// <summary>Docs: Section 7.5 — Assignment Module</summary>
