@@ -254,6 +254,15 @@ public class NotificationsController : BaseController
         await _notificationService.MarkAsReadAsync(id, CurrentUserId);
         return ApiNoContent();
     }
+
+    /// <summary>Mark all notifications as read for the current user.</summary>
+    [HttpPatch("mark-all-read")]
+    [Authorize]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        await _notificationService.MarkAllAsReadAsync(CurrentUserId);
+        return ApiOk<string>("All notifications marked as read.");
+    }
 }
 
 // ─── TIMETABLE ────────────────────────────────────────────────────────────────
