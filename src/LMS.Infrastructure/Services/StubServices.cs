@@ -74,15 +74,3 @@ public class AttendanceService : IAttendanceService
         => throw new NotImplementedException("TODO: Calculate attendance % per course. See Section 26.6 for formula.");
 }
 
-// ─── AUDIT SERVICE ────────────────────────────────────────────────────────────
-/// <summary>Docs: Section 32 — Audit Log Module</summary>
-public class AuditService : IAuditService
-{
-    public Task LogAsync(string action, string entityType, string? entityId, Guid? userId,
-        string? userRole, string? before, string? after, string? ipAddress, string? userAgent)
-        => throw new NotImplementedException("TODO: Create AuditLog record. Never throw on audit failure — catch internally.");
-
-    public Task<PaginatedResult<object>> QueryLogsAsync(string? entityType, string? action,
-        Guid? userId, DateTime? from, DateTime? to, int page, int pageSize)
-        => throw new NotImplementedException("TODO: Query AuditLogs with filters, paginate results.");
-}

@@ -14,7 +14,8 @@
       "Bash(grep -E '\\\\.\\(ts|html|scss\\)$')",
       "Bash(ls /workspaces/ && ls /workspaces/lms-backend/)",
       "Read(//workspaces/**)",
-      "Bash(xargs cat -n)"
+      "Bash(xargs cat -n)",
+      "Bash(xargs cat)"
     ]
   }
 }
