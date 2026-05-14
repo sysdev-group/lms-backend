@@ -41,7 +41,7 @@ public class AuthController : BaseController
         var result = await _authService.LoginAsync(request, IpAddress);
 
         // Set refresh token as HttpOnly cookie — never accessible from JavaScript
-        SetRefreshTokenCookie(result.AccessToken);
+        SetRefreshTokenCookie(result.RefreshToken);
 
         return ApiOk(result);
     }
@@ -78,7 +78,7 @@ public class AuthController : BaseController
             ?? throw new UnauthorizedAccessException("Refresh token not found.");
 
         var result = await _authService.RefreshTokenAsync(refreshToken, IpAddress);
-        SetRefreshTokenCookie(result.AccessToken);
+        SetRefreshTokenCookie(result.RefreshToken);
 
         return ApiOk(result);
     }

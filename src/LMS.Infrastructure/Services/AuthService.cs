@@ -43,11 +43,11 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
 
         var accessToken = GenerateAccessToken(user);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
+        var (refreshToken, rawToken) = await CreateRefreshTokenAsync(user.Id, ipAddress);
 
         await _db.SaveChangesAsync();
 
-        return BuildLoginResponse(accessToken, refreshToken.TokenHash, user);
+        return BuildLoginResponse(accessToken, rawToken, user);
     }
 
     /// <inheritdoc />
@@ -88,13 +88,13 @@ public class AuthService : IAuthService
         // Rotate — revoke old, issue new
         token.RevokedAt = DateTime.UtcNow;
 
-        var newRefreshToken = await CreateRefreshTokenAsync(token.UserId, ipAddress);
+        var (newRefreshToken, newRawToken) = await CreateRefreshTokenAsync(token.UserId, ipAddress);
         token.ReplacedByTokenId = newRefreshToken.Id;
 
         var accessToken = GenerateAccessToken(token.User);
         await _db.SaveChangesAsync();
 
-        return BuildLoginResponse(accessToken, newRefreshToken.TokenHash, token.User);
+        return BuildLoginResponse(accessToken, newRawToken, token.User);
     }
 
     /// <inheritdoc />
@@ -149,9 +149,8 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private async Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string ipAddress)
+    private async Task<(RefreshToken token, string rawToken)> CreateRefreshTokenAsync(Guid userId, string ipAddress)
     {
-        // Generate a cryptographically random token
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
         var refreshToken = new RefreshToken
@@ -160,19 +159,13 @@ public class AuthService : IAuthService
             UserId = userId,
             TokenHash = HashToken(rawToken),
             IssuedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),   // 7-day refresh tokens per Section 30
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
             DeviceInfo = ipAddress
         };
 
-        // Store raw token temporarily so we can return it in the response/cookie
-        // The actual stored value is the hash — never the raw token
-        refreshToken.TokenHash = rawToken; // TEMP: swap to raw so we can return it
         _db.RefreshTokens.Add(refreshToken);
 
-        // Re-hash before saving
-        refreshToken.TokenHash = HashToken(rawToken);
-
-        return await Task.FromResult(refreshToken);
+        return await Task.FromResult((refreshToken, rawToken));
     }
 
     private async Task RevokeAllUserTokensAsync(Guid userId)
@@ -191,9 +184,10 @@ public class AuthService : IAuthService
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    private static LoginResponse BuildLoginResponse(string accessToken, string refreshToken, User user) => new()
+    private static LoginResponse BuildLoginResponse(string accessToken, string rawRefreshToken, User user) => new()
     {
         AccessToken = accessToken,
+        RefreshToken = rawRefreshToken,
         User = new AuthUserDto
         {
             Id = user.Id,

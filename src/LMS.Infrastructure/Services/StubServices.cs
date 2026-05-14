@@ -19,7 +19,6 @@ using LMS.Application.DTOs.Users;
 using LMS.Application.DTOs.Courses;
 using LMS.Application.DTOs.Assignments;
 using LMS.Application.DTOs.Submissions;
-using LMS.Application.DTOs.Grades;
 using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.DTOs.Timetable;
@@ -27,23 +26,6 @@ using LMS.Application.DTOs.Attendance;
 using LMS.Application.Interfaces;
 
 namespace LMS.Infrastructure.Services;
-
-// ─── GRADE SERVICE ────────────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.6 + Section 27 — Grading Module</summary>
-public class GradeService : IGradeService
-{
-    public Task<List<GradeDto>> GetByStudentAsync(Guid studentId, Guid? courseId = null)
-        => throw new NotImplementedException("TODO: Only return published grades to students. See Section 27.6.");
-
-    public Task<List<GradeDto>> GetByCourseAsync(Guid courseId)
-        => throw new NotImplementedException("TODO: Lecturer can see all grades, published or not.");
-
-    public Task PublishGradeAsync(Guid gradeId)
-        => throw new NotImplementedException("TODO: Set IsPublished = true, set PublishedAt, trigger notification.");
-
-    public Task PublishAllGradesForCourseAsync(Guid courseId)
-        => throw new NotImplementedException("TODO: Bulk publish — publish all unpublished grades for the course.");
-}
 
 // ─── NOTIFICATION SERVICE ─────────────────────────────────────────────────────
 /// <summary>Docs: Section 7.7 + Section 23 — Notification System</summary>

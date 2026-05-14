@@ -1,8 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh pr *)",
-      "PowerShell(gh pr list)"
+      "Bash(git merge --no-ff origin/feature/shahudhaan/course-postman-tests -m 'merge: feature/shahudhaan/course-postman-tests into main *)",
+      "Bash(dotnet build *)",
+      "Bash(git merge --no-ff origin/feature/aiman/user-service -m 'merge: feature/aiman/user-service into main *)",
+      "Bash(git merge --no-ff origin/feature/aiman/file-service -m 'merge: feature/aiman/file-service into main *)",
+      "Bash(git merge --no-ff origin/feature/shahudhaan/course-service -m 'merge: feature/shahudhaan/course-service into main *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git merge --no-ff origin/feat/assignment-service -m 'merge: feat/assignment-service into main *)",
+      "Bash(git merge *)",
+      "Bash(grep -E '\\\\.\\(cs|ts|json|csproj\\)$')",
+      "Bash(grep -E '\\\\.\\(ts|html|scss\\)$')",
+      "Bash(ls /workspaces/ && ls /workspaces/lms-backend/)",
+      "Read(//workspaces/**)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace LMS.Application.DTOs.Auth;
 
@@ -20,6 +21,10 @@ public class LoginResponse
     public string TokenType { get; set; } = "Bearer";
     public int ExpiresInSeconds { get; set; } = 900; // 15 minutes
     public AuthUserDto User { get; set; } = null!;
+
+    /// <summary>Raw refresh token — written to HttpOnly cookie only, never serialized to JSON.</summary>
+    [JsonIgnore]
+    public string RefreshToken { get; set; } = string.Empty;
 }
 
 /// <summary>Minimal user info returned with the auth token.</summary>
