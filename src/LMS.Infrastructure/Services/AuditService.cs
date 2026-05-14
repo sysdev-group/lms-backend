@@ -63,7 +63,7 @@ public class AuditService : IAuditService
     /// All filter parameters are optional and combinable.
     /// </summary>
     /// <exception cref="UnauthorizedAccessException">Thrown when the caller is not an Admin.</exception>
-    public async Task<PaginatedResult<object>> QueryLogsAsync(string? entityType, string? action,
+    public async Task<PaginatedResult<AuditLogDto>> QueryLogsAsync(string? entityType, string? action,
         Guid? userId, DateTime? from, DateTime? to, int page, int pageSize)
     {
         if (_currentUser.Role != UserRole.Admin)
@@ -86,20 +86,22 @@ public class AuditService : IAuditService
         if (to.HasValue)
             q = q.Where(l => l.Timestamp <= to.Value);
 
+        var safePage = Math.Max(page, 1);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
         var totalCount = await q.CountAsync();
 
         var logs = await q
             .OrderByDescending(l => l.Timestamp)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync();
 
-        return new PaginatedResult<object>
+        return new PaginatedResult<AuditLogDto>
         {
-            Items = logs.Select(l => (object)MapToDto(l)).ToList(),
+            Items = logs.Select(MapToDto).ToList(),
             TotalCount = totalCount,
-            Page = page,
-            PageSize = pageSize
+            Page = safePage,
+            PageSize = safePageSize
         };
     }
 

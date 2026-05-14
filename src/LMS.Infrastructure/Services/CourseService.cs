@@ -94,6 +94,7 @@ public class CourseService : ICourseService
 
     private IQueryable<Course> BaseCourseQuery()
         => _db.Courses
+            .AsNoTracking()
             .Include(c => c.Lecturer)
             .Include(c => c.Semester)
             .Include(c => c.Enrollments);
@@ -132,10 +133,10 @@ public class CourseService : ICourseService
 
     private static IQueryable<Course> ApplySearchFilter(IQueryable<Course> courses, string search)
     {
-        var term = search.Trim().ToLowerInvariant();
+        var term = $"%{search.Trim()}%";
         return courses.Where(c =>
-            c.Code.ToLower().Contains(term) ||
-            c.Title.ToLower().Contains(term));
+            EF.Functions.ILike(c.Code, term) ||
+            EF.Functions.ILike(c.Title, term));
     }
 
     private async Task ValidateCourseReferencesAsync(CreateCourseRequest request)

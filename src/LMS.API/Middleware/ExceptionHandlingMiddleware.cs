@@ -38,9 +38,9 @@ public class ExceptionHandlingMiddleware
     {
         var (statusCode, message) = exception switch
         {
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, exception.Message),
+            UnauthorizedAccessException => (HttpStatusCode.Forbidden, exception.Message),
             KeyNotFoundException        => (HttpStatusCode.NotFound, exception.Message),
-            InvalidOperationException   => (HttpStatusCode.UnprocessableEntity, exception.Message),
+            InvalidOperationException   => (HttpStatusCode.BadRequest, exception.Message),
             ArgumentException           => (HttpStatusCode.BadRequest, exception.Message),
             NotImplementedException     => (HttpStatusCode.NotImplemented, "This feature is not yet implemented."),
             _                           => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")

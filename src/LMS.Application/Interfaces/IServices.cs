@@ -8,6 +8,7 @@ using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.DTOs.Timetable;
 using LMS.Application.DTOs.Attendance;
+using LMS.Application.DTOs.Audit;
 
 namespace LMS.Application.Interfaces;
 
@@ -148,7 +149,7 @@ public interface IAuditService
 {
     Task LogAsync(string action, string entityType, string? entityId, Guid? userId,
         string? userRole, string? before, string? after, string? ipAddress, string? userAgent);
-    Task<PaginatedResult<object>> QueryLogsAsync(string? entityType, string? action,
+    Task<PaginatedResult<AuditLogDto>> QueryLogsAsync(string? entityType, string? action,
         Guid? userId, DateTime? from, DateTime? to, int page, int pageSize);
 }
 

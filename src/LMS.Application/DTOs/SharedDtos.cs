@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 // ─── Submissions ───────────────────────────────────────────────────────────────
 namespace LMS.Application.DTOs.Submissions
 {
@@ -14,12 +16,15 @@ namespace LMS.Application.DTOs.Submissions
 
     public class CreateSubmissionRequest
     {
+        [Required]
         public Guid AssignmentId { get; set; }
+        [Required]
         public Guid? FileId { get; set; }
     }
 
     public class GradeSubmissionRequest
     {
+        [Range(0, double.MaxValue)]
         public decimal MarksAwarded { get; set; }
         public string? Feedback { get; set; }
     }
@@ -57,7 +62,9 @@ namespace LMS.Application.DTOs.Notifications
 
     public class SendNotificationRequest
     {
+        [Required]
         public string Title { get; set; } = string.Empty;
+        [Required]
         public string Body { get; set; } = string.Empty;
         public NotificationPriority Priority { get; set; } = NotificationPriority.Normal;
         public List<Guid> RecipientIds { get; set; } = new();
@@ -80,8 +87,11 @@ namespace LMS.Application.DTOs.Enrollment
 
     public class EnrollStudentRequest
     {
+        [Required]
         public Guid StudentId { get; set; }
+        [Required]
         public Guid CourseId { get; set; }
+        [Required]
         public Guid SemesterId { get; set; }
     }
 }
@@ -104,12 +114,16 @@ namespace LMS.Application.DTOs.Timetable
 
     public class CreateSessionRequest
     {
+        [Required]
         public Guid CourseId { get; set; }
+        [Required]
         public Guid LecturerId { get; set; }
+        [Required]
         public Guid SemesterId { get; set; }
         public DayOfWeek DayOfWeek { get; set; }
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }
+        [Required]
         public string Room { get; set; } = string.Empty;
         public string Type { get; set; } = "Lecture";
     }
@@ -130,6 +144,7 @@ namespace LMS.Application.DTOs.Attendance
 
     public class MarkAttendanceRequest
     {
+        [Required]
         public Guid TimetableSessionId { get; set; }
         public DateOnly Date { get; set; }
         public List<StudentAttendanceEntry> Records { get; set; } = new();

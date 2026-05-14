@@ -23,6 +23,7 @@ using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.DTOs.Attendance;
 using LMS.Application.Interfaces;
+using LMS.Domain.Enums;
 
 namespace LMS.Infrastructure.Services;
 
@@ -47,6 +48,9 @@ public class NotificationService : INotificationService
 /// <summary>Docs: Section 28 — Enrollment Workflow</summary>
 public class EnrollmentService : IEnrollmentService
 {
+    private readonly ICurrentUserService _currentUser;
+    public EnrollmentService(ICurrentUserService currentUser) { _currentUser = currentUser; }
+
     public Task<EnrollmentDto> EnrollStudentAsync(EnrollStudentRequest request, Guid enrolledById)
         => throw new NotImplementedException("TODO: Check duplicate, check enrollment deadline, check capacity.");
 
@@ -54,7 +58,11 @@ public class EnrollmentService : IEnrollmentService
         => throw new NotImplementedException("TODO: Soft delete — set Status = Dropped, DroppedAt, DroppedById.");
 
     public Task<List<EnrollmentDto>> GetByStudentAsync(Guid studentId)
-        => throw new NotImplementedException("TODO: Include course and semester details.");
+    {
+        if (_currentUser.Role == UserRole.Student && _currentUser.UserId != studentId)
+            throw new UnauthorizedAccessException("You may only view your own data.");
+        throw new NotImplementedException("TODO: Include course and semester details.");
+    }
 
     public Task<List<EnrollmentDto>> GetByCourseAsync(Guid courseId)
         => throw new NotImplementedException("TODO: Include student details, filter active enrollments.");
@@ -64,6 +72,9 @@ public class EnrollmentService : IEnrollmentService
 /// <summary>Docs: Section 26 — Attendance Management Module</summary>
 public class AttendanceService : IAttendanceService
 {
+    private readonly ICurrentUserService _currentUser;
+    public AttendanceService(ICurrentUserService currentUser) { _currentUser = currentUser; }
+
     public Task MarkAttendanceAsync(MarkAttendanceRequest request, Guid lecturerId)
         => throw new NotImplementedException("TODO: Create AttendanceSession, then AttendanceRecords per student.");
 
@@ -71,6 +82,10 @@ public class AttendanceService : IAttendanceService
         => throw new NotImplementedException("TODO: Return all student records for this session.");
 
     public Task<List<StudentAttendanceSummaryDto>> GetStudentSummaryAsync(Guid studentId)
-        => throw new NotImplementedException("TODO: Calculate attendance % per course. See Section 26.6 for formula.");
+    {
+        if (_currentUser.Role == UserRole.Student && _currentUser.UserId != studentId)
+            throw new UnauthorizedAccessException("You may only view your own data.");
+        throw new NotImplementedException("TODO: Calculate attendance % per course. See Section 26.6 for formula.");
+    }
 }
 

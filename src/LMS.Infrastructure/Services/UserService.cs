@@ -17,11 +17,13 @@ public class UserService : IUserService
 {
     private readonly AppDbContext _db;
     private readonly IAuthService _authService;
+    private readonly ICurrentUserService _currentUser;
 
-    public UserService(AppDbContext db, IAuthService authService)
+    public UserService(AppDbContext db, IAuthService authService, ICurrentUserService currentUser)
     {
         _db = db;
         _authService = authService;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -30,7 +32,7 @@ public class UserService : IUserService
     /// </summary>
     public async Task<PaginatedResult<UserDto>> GetUsersAsync(UserQueryParams query)
     {
-        var q = _db.Users.AsQueryable();
+        var q = _db.Users.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -47,21 +49,23 @@ public class UserService : IUserService
         if (query.IsActive.HasValue)
             q = q.Where(u => u.IsActive == query.IsActive.Value);
 
+        var page = Math.Max(query.Page, 1);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
         var totalCount = await q.CountAsync();
 
         var users = await q
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         return new PaginatedResult<UserDto>
         {
             Items = users.Select(MapToDto).ToList(),
             TotalCount = totalCount,
-            Page = query.Page,
-            PageSize = query.PageSize
+            Page = page,
+            PageSize = pageSize
         };
     }
 
@@ -71,6 +75,9 @@ public class UserService : IUserService
     /// </summary>
     public async Task<UserDto> GetByIdAsync(Guid id)
     {
+        if (_currentUser.Role != UserRole.Admin && _currentUser.UserId != id)
+            throw new UnauthorizedAccessException("You may only view your own profile.");
+
         var user = await _db.Users.FindAsync(id)
             ?? throw new KeyNotFoundException($"User {id} not found.");
 

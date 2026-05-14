@@ -113,6 +113,7 @@ public class SubmissionService : ISubmissionService
             await EnsureLecturerOwnsAssignmentAsync(assignmentId);
 
         var submissions = await _db.Submissions
+            .AsNoTracking()
             .Include(s => s.Student)
             .Include(s => s.File)
             .Include(s => s.Grade)
