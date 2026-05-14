@@ -28,24 +28,6 @@ using LMS.Application.Interfaces;
 
 namespace LMS.Infrastructure.Services;
 
-
-// ─── SUBMISSION SERVICE ───────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.5 — Assignment Module (Submissions)</summary>
-public class SubmissionService : ISubmissionService
-{
-    public Task<SubmissionDto> SubmitAsync(CreateSubmissionRequest request, Guid studentId)
-        => throw new NotImplementedException("TODO: Check deadline, set IsLate flag, check resubmission rules.");
-
-    public Task<SubmissionDto> GetByIdAsync(Guid id)
-        => throw new NotImplementedException("TODO: Verify caller has access — student sees own, lecturer sees course subs.");
-
-    public Task<List<SubmissionDto>> GetByAssignmentAsync(Guid assignmentId)
-        => throw new NotImplementedException("TODO: Verify caller is the course lecturer or admin.");
-
-    public Task<SubmissionDto> GradeSubmissionAsync(Guid submissionId, GradeSubmissionRequest request, Guid gradedById)
-        => throw new NotImplementedException("TODO: Create Grade record, apply grading scale. See Section 27.");
-}
-
 // ─── GRADE SERVICE ────────────────────────────────────────────────────────────
 /// <summary>Docs: Section 7.6 + Section 27 — Grading Module</summary>
 public class GradeService : IGradeService
