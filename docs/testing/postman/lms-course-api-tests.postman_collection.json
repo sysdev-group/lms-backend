@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "7c526dd4-34c7-4fd7-bb0a-2d9fd2df3bd8",
+    "name": "LMS Course API Tests",
+    "description": "Postman tests for the LMS Course API endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "GET all courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            },
+            "description": "Returns the paged course list."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET all courses returns 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response envelope has expected fields', function () {",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});",
+                  "",
+                  "pm.test('Course list data or pagination is present', function () {",
+                  "  const payload = json.data;",
+                  "  if (Array.isArray(payload)) {",
+                  "    pm.expect(payload).to.be.an('array');",
+                  "  } else {",
+                  "    pm.expect(payload).to.be.an('object');",
+                  "    pm.expect(payload.items || payload.data || payload.results || payload).to.exist;",
+                  "    if (payload.items) {",
+                  "      pm.expect(payload.items).to.be.an('array');",
+                  "      pm.expect(payload).to.include.any.keys('page', 'pageSize', 'totalCount', 'totalPages');",
+                  "    }",
+                  "  }",
+                  "  if (json.pagination) {",
+                  "    pm.expect(json.pagination).to.include.any.keys('page', 'pageSize', 'totalCount', 'totalPages');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET course by valid id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "Returns one course by an existing course id."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET course by valid id returns 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const course = json.data;",
+                  "",
+                  "pm.test('Response envelope has expected fields', function () {",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});",
+                  "",
+                  "pm.test('Course body has expected fields', function () {",
+                  "  pm.expect(course).to.be.an('object');",
+                  "  pm.expect(course).to.have.property('id');",
+                  "  pm.expect(course).to.have.property('code');",
+                  "  pm.expect(course).to.have.property('title');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET course by invalid id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Returns 404 Not Found for a non-existing course id."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET course by invalid id returns 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error response is valid JSON when a body is returned', function () {",
+                  "  if (pm.response.text()) {",
+                  "    pm.response.to.be.json;",
+                  "  }",
+                  "});",
+                  "",
+                  "if (pm.response.text()) {",
+                  "  const json = pm.response.json();",
+                  "  pm.test('Error response has expected structure', function () {",
+                  "    if (Object.prototype.hasOwnProperty.call(json, 'success')) {",
+                  "      pm.expect(json.success).to.eql(false);",
+                  "      pm.expect(json).to.have.property('message');",
+                  "      pm.expect(json).to.have.property('errors');",
+                  "    } else {",
+                  "      pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST valid course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CS101\",\n  \"title\": \"Introduction to Computer Science\",\n  \"description\": \"Core computing foundations\",\n  \"lecturerId\": \"PASTE_VALID_LECTURER_GUID\",\n  \"semesterId\": \"PASTE_VALID_SEMESTER_GUID\",\n  \"creditHours\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            },
+            "description": "Creates a course with a valid request body. Requires an Admin token."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST valid course returns 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const course = json.data;",
+                  "",
+                  "pm.test('Success response envelope has expected fields', function () {",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});",
+                  "",
+                  "pm.test('Created course has expected fields', function () {",
+                  "  pm.expect(course).to.be.an('object');",
+                  "  pm.expect(course).to.have.property('id');",
+                  "  pm.expect(course).to.have.property('code');",
+                  "  pm.expect(course).to.have.property('title');",
+                  "});",
+                  "",
+                  "pm.test('Created course id is saved to courseId', function () {",
+                  "  pm.expect(course.id).to.exist;",
+                  "  pm.environment.set('courseId', course.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST invalid course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"\",\n  \"title\": \"\",\n  \"description\": \"\",\n  \"creditHours\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            },
+            "description": "Returns validation errors for missing required fields. Requires an Admin token."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST invalid course returns 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Validation response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Validation response has expected structure', function () {",
+                  "  if (Object.prototype.hasOwnProperty.call(json, 'success')) {",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('errors');",
+                  "  } else {",
+                  "    pm.expect(json).to.be.an('object');",
+                  "    pm.expect(json).to.include.any.keys('errors', 'title', 'message');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:5001/api/v1"
+    },
+    {
+      "key": "token",
+      "value": "paste-valid-jwt-token-here"
+    },
+    {
+      "key": "courseId",
+      "value": "paste-existing-course-id-here"
+    }
+  ]
+}
