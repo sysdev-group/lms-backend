@@ -87,7 +87,7 @@ public class AuditService : IAuditService
             q = q.Where(l => l.Timestamp <= to.Value);
 
         var safePage = Math.Max(page, 1);
-        var safePageSize = Math.Clamp(pageSize, 1, 100);
+        var safePageSize = Math.Clamp(pageSize, 1, PaginationConstants.MaxPageSize);
         var totalCount = await q.CountAsync();
 
         var logs = await q

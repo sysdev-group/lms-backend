@@ -50,7 +50,7 @@ public class UserService : IUserService
             q = q.Where(u => u.IsActive == query.IsActive.Value);
 
         var page = Math.Max(query.Page, 1);
-        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var pageSize = Math.Clamp(query.PageSize, 1, PaginationConstants.MaxPageSize);
         var totalCount = await q.CountAsync();
 
         var users = await q

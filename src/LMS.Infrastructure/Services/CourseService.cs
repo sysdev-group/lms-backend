@@ -28,7 +28,7 @@ public class CourseService : ICourseService
         string role)
     {
         var page = Math.Max(query.Page, 1);
-        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var pageSize = Math.Clamp(query.PageSize, 1, PaginationConstants.MaxPageSize);
         var courses = ApplyFilters(BaseCourseQuery(), query, requestingUserId, role);
 
         var totalCount = await courses.CountAsync();
