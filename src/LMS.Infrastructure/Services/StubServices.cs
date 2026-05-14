@@ -21,7 +21,6 @@ using LMS.Application.DTOs.Assignments;
 using LMS.Application.DTOs.Submissions;
 using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Enrollment;
-using LMS.Application.DTOs.Timetable;
 using LMS.Application.DTOs.Attendance;
 using LMS.Application.Interfaces;
 
@@ -59,23 +58,6 @@ public class EnrollmentService : IEnrollmentService
 
     public Task<List<EnrollmentDto>> GetByCourseAsync(Guid courseId)
         => throw new NotImplementedException("TODO: Include student details, filter active enrollments.");
-}
-
-// ─── TIMETABLE SERVICE ────────────────────────────────────────────────────────
-/// <summary>Docs: Section 24 — Timetable Management Module</summary>
-public class TimetableService : ITimetableService
-{
-    public Task<List<TimetableSessionDto>> GetByBatchAsync(Guid semesterId, Guid? lecturerId = null)
-        => throw new NotImplementedException("TODO: Query sessions by semester, optionally filter by lecturer.");
-
-    public Task<TimetableSessionDto> CreateSessionAsync(CreateSessionRequest request)
-        => throw new NotImplementedException("TODO: Run conflict detection before saving. See Section 24.5.");
-
-    public Task PublishSessionAsync(Guid sessionId)
-        => throw new NotImplementedException("TODO: Set IsPublished = true, send notifications to enrolled students.");
-
-    public Task DeleteSessionAsync(Guid sessionId)
-        => throw new NotImplementedException("TODO: Only allow delete of unpublished sessions.");
 }
 
 // ─── ATTENDANCE SERVICE ───────────────────────────────────────────────────────

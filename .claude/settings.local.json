@@ -13,7 +13,8 @@
       "Bash(grep -E '\\\\.\\(cs|ts|json|csproj\\)$')",
       "Bash(grep -E '\\\\.\\(ts|html|scss\\)$')",
       "Bash(ls /workspaces/ && ls /workspaces/lms-backend/)",
-      "Read(//workspaces/**)"
+      "Read(//workspaces/**)",
+      "Bash(xargs cat -n)"
     ]
   }
 }
