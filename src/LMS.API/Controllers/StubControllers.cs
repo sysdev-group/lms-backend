@@ -16,6 +16,7 @@
 
 using LMS.Application.DTOs.Assignments;
 using LMS.Application.DTOs.Attendance;
+using LMS.Application.DTOs.Submissions;
 using LMS.Application.DTOs.Courses;
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.DTOs.Notifications;

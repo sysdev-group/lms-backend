@@ -28,29 +28,6 @@ using LMS.Application.Interfaces;
 
 namespace LMS.Infrastructure.Services;
 
-// ─── USER SERVICE ─────────────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.3 — User Management Module</summary>
-public class UserService : IUserService
-{
-    public Task<PaginatedResult<UserDto>> GetUsersAsync(UserQueryParams query)
-        => throw new NotImplementedException("TODO: Query Users table with filters. See Section 7.3.");
-
-    public Task<UserDto> GetByIdAsync(Guid id)
-        => throw new NotImplementedException("TODO: Find user by ID, map to UserDto.");
-
-    public Task<UserDto> CreateUserAsync(CreateUserRequest request)
-        => throw new NotImplementedException("TODO: Create user, hash a temp password, send welcome email.");
-
-    public Task<UserDto> UpdateUserAsync(Guid id, UpdateUserRequest request)
-        => throw new NotImplementedException("TODO: Find user, apply partial updates, save.");
-
-    public Task DeactivateUserAsync(Guid id)
-        => throw new NotImplementedException("TODO: Set IsActive = false. Soft delete — never hard delete.");
-
-    public Task TriggerPasswordResetAsync(Guid userId)
-        => throw new NotImplementedException("TODO: Call ForgotPasswordAsync on IAuthService. See Section 29.3.");
-}
-
 // ─── COURSE SERVICE ───────────────────────────────────────────────────────────
 /// <summary>Docs: Section 7.4 — Course Module</summary>
 public class CourseService : ICourseService
