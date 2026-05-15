@@ -40,14 +40,13 @@ public class EnrollmentService : IEnrollmentService
         if (course.SemesterId != request.SemesterId)
             throw new ArgumentException("Course does not belong to the specified semester.", nameof(request));
 
-        var alreadyEnrolled = await _db.Enrollments.AnyAsync(e =>
+        var existingEnrollment = await _db.Enrollments.AnyAsync(e =>
             e.StudentId == request.StudentId &&
             e.CourseId == request.CourseId &&
-            e.SemesterId == request.SemesterId &&
-            e.Status == EnrollmentStatus.Active);
+            e.SemesterId == request.SemesterId);
 
-        if (alreadyEnrolled)
-            throw new InvalidOperationException("Student is already actively enrolled in this course.");
+        if (existingEnrollment)
+            throw new InvalidOperationException("Student is already enrolled in this course for the semester.");
 
         var enrollment = new Enrollment
         {
