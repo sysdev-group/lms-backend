@@ -81,8 +81,27 @@ public class CourseService : ICourseService
     }
 
     /// <inheritdoc />
-    public Task<CourseDto> UpdateCourseAsync(Guid id, UpdateCourseRequest request)
-        => throw new NotImplementedException("TODO: Partial update - only update non-null fields.");
+    public async Task<CourseDto> UpdateCourseAsync(Guid id, UpdateCourseRequest request)
+    {
+        var course = await _db.Courses.FindAsync(id)
+            ?? throw new KeyNotFoundException($"Course {id} not found.");
+
+        if (request.LecturerId.HasValue)
+        {
+            var lecturerExists = await _db.Users.AnyAsync(u =>
+                u.Id == request.LecturerId.Value && u.Role == UserRole.Lecturer && u.IsActive);
+            if (!lecturerExists)
+                throw new KeyNotFoundException($"Lecturer {request.LecturerId} not found or is inactive.");
+            course.LecturerId = request.LecturerId.Value;
+        }
+
+        if (request.Title is not null) course.Title = request.Title.Trim();
+        if (request.Description is not null) course.Description = request.Description.Trim();
+        if (request.IsArchived.HasValue) course.IsArchived = request.IsArchived.Value;
+
+        await _db.SaveChangesAsync();
+        return await GetByIdAsync(course.Id);
+    }
 
     /// <inheritdoc />
     public Task ArchiveCourseAsync(Guid id)
