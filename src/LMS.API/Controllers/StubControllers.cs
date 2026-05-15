@@ -454,6 +454,15 @@ public class EnrollmentController : BaseController
         var result = await _enrollmentService.GetByStudentAsync(studentId);
         return ApiOk(result);
     }
+
+    /// <summary>Get all active enrollments for a course. Admin only.</summary>
+    [HttpGet("course/{courseId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetByCourse(Guid courseId)
+    {
+        var result = await _enrollmentService.GetByCourseAsync(courseId);
+        return ApiOk(result);
+    }
 }
 
 // ─── SEARCH ───────────────────────────────────────────────────────────────────
