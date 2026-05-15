@@ -8,7 +8,6 @@ namespace LMS.Infrastructure.Services;
 
 /// <summary>
 /// Handles in-app notification retrieval, creation, and read-state updates.
-/// Business logic is intentionally pending; this class establishes the concrete service structure.
 /// </summary>
 public class NotificationService : INotificationService
 {
@@ -52,7 +51,15 @@ public class NotificationService : INotificationService
     /// </summary>
     public async Task SendAsync(SendNotificationRequest request, Guid senderId)
     {
-        var recipientIds = request.RecipientIds
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.Title))
+            throw new ArgumentException("Notification title is required.", nameof(request));
+
+        if (string.IsNullOrWhiteSpace(request.Body))
+            throw new ArgumentException("Notification body is required.", nameof(request));
+
+        var recipientIds = (request.RecipientIds ?? new List<Guid>())
             .Distinct()
             .ToList();
 
