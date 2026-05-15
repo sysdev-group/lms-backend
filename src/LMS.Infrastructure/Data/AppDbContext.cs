@@ -1,4 +1,5 @@
 using LMS.Domain.Entities;
+using LMS.Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Infrastructure.Data;
@@ -13,6 +14,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     // ─── DbSets ───────────────────────────────────────────────────────────────
+    public DbSet<Programme> Programmes => Set<Programme>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Semester> Semesters => Set<Semester>();
@@ -178,6 +180,23 @@ public class AppDbContext : DbContext
             e.HasIndex(a => a.EntityType);
             e.HasIndex(a => a.UserId);
             // No FK to User — logs must survive user deletion
+        });
+
+        // ─── Programme ────────────────────────────────────────────────────────
+        modelBuilder.Entity<Programme>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.HasIndex(p => p.Code).IsUnique();
+            e.Property(p => p.Code).IsRequired().HasMaxLength(20);
+            e.Property(p => p.Title).IsRequired().HasMaxLength(200);
+            e.Property(p => p.Description).HasMaxLength(1000);
+            e.Property(p => p.Department).HasMaxLength(200);
+            // Shadow FK — adds nullable ProgrammeId column to Courses table without touching Domain
+            e.HasMany(p => p.Courses)
+             .WithOne()
+             .HasForeignKey("ProgrammeId")
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

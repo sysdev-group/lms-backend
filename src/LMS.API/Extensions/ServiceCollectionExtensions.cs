@@ -1,6 +1,7 @@
 using System.Text;
 using LMS.Application.Interfaces;
 using LMS.Infrastructure.Data;
+using LMS.Infrastructure.Interfaces;
 using LMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -106,6 +107,9 @@ public static class ServiceCollectionExtensions
 
         // ── Worked example ────────────────────────────────────────────────────
         services.AddScoped<IAuthService, AuthService>();
+
+        // ── Programme (additive hierarchy layer above courses) ─────────────────
+        services.AddScoped<IProgrammeService, ProgrammeService>();
 
         // ── Stub services — replace NotImplementedException methods with real logic ──
         services.AddScoped<IUserService, UserService>();

@@ -1,5 +1,6 @@
 using LMS.Domain.Entities;
 using LMS.Domain.Enums;
+using LMS.Infrastructure.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class DbSeeder
         await SeedEnrollmentsAsync(db);
         await SeedAssignmentsAsync(db);
         await SeedTimetableSessionsAsync(db);
+        await SeedProgrammesAsync(db);
     }
 
     // ─── Semester ─────────────────────────────────────────────────────────────
@@ -284,5 +286,70 @@ public static class DbSeeder
 
         db.TimetableSessions.AddRange(toAdd);
         await db.SaveChangesAsync();
+    }
+
+    // ─── Programmes ───────────────────────────────────────────────────────────
+
+    private static async Task SeedProgrammesAsync(AppDbContext db)
+    {
+        var seedCodes = new[] { "BSC-CS", "BSC-IT" };
+        var existing = await db.Programmes
+            .Where(p => seedCodes.Contains(p.Code))
+            .Select(p => p.Code)
+            .ToListAsync();
+
+        if (existing.Count == seedCodes.Length) return;
+
+        var cs101 = await db.Courses.FirstAsync(c => c.Code == "CS101");
+        var cs201 = await db.Courses.FirstAsync(c => c.Code == "CS201");
+
+        var toAdd = new List<Programme>();
+
+        Programme? bscCs = null;
+
+        if (!existing.Contains("BSC-CS"))
+        {
+            bscCs = new Programme
+            {
+                Id = Guid.NewGuid(),
+                Code = "BSC-CS",
+                Title = "BSc Computer Science",
+                Description = "Undergraduate programme covering core computer science disciplines including algorithms, systems, and software engineering.",
+                Department = "Computer Science",
+                Year = 2,
+                CreatedAt = DateTime.UtcNow
+            };
+            toAdd.Add(bscCs);
+        }
+
+        if (!existing.Contains("BSC-IT"))
+            toAdd.Add(new Programme
+            {
+                Id = Guid.NewGuid(),
+                Code = "BSC-IT",
+                Title = "BSc Information Technology",
+                Description = "Undergraduate programme focused on IT infrastructure, networking, and applied computing solutions.",
+                Department = "Computer Science",
+                Year = 2,
+                CreatedAt = DateTime.UtcNow
+            });
+
+        if (toAdd.Count == 0) return;
+
+        db.Programmes.AddRange(toAdd);
+        await db.SaveChangesAsync();
+
+        // Assign both existing courses to BSC-CS via the shadow FK ProgrammeId
+        if (bscCs is not null)
+        {
+            var coursesToLink = await db.Courses
+                .Where(c => c.Code == "CS101" || c.Code == "CS201")
+                .ToListAsync();
+
+            foreach (var course in coursesToLink)
+                db.Entry(course).Property("ProgrammeId").CurrentValue = bscCs.Id;
+
+            await db.SaveChangesAsync();
+        }
     }
 }
