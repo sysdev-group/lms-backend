@@ -80,8 +80,21 @@ public class NotificationService : INotificationService
     /// </summary>
     public async Task MarkAllAsReadAsync(Guid userId)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Implement bulk notification read-state update.");
+        var unreadNotifications = await _db.Notifications
+            .Where(n => n.RecipientId == userId && !n.IsRead)
+            .ToListAsync();
+
+        if (unreadNotifications.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+        foreach (var notification in unreadNotifications)
+        {
+            notification.IsRead = true;
+            notification.ReadAt = now;
+        }
+
+        await _db.SaveChangesAsync();
     }
 
     private static NotificationDto MapToDto(Domain.Entities.Notification notification) => new()
