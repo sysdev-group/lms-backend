@@ -19,30 +19,12 @@ using LMS.Application.DTOs.Users;
 using LMS.Application.DTOs.Courses;
 using LMS.Application.DTOs.Assignments;
 using LMS.Application.DTOs.Submissions;
-using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.DTOs.Attendance;
 using LMS.Application.Interfaces;
 using LMS.Domain.Enums;
 
 namespace LMS.Infrastructure.Services;
-
-// ─── NOTIFICATION SERVICE ─────────────────────────────────────────────────────
-/// <summary>Docs: Section 7.7 + Section 23 — Notification System</summary>
-public class NotificationService : INotificationService
-{
-    public Task<List<NotificationDto>> GetForUserAsync(Guid userId, bool unreadOnly = false)
-        => throw new NotImplementedException("TODO: Filter by RecipientId, optionally filter unread only.");
-
-    public Task SendAsync(SendNotificationRequest request, Guid senderId)
-        => throw new NotImplementedException("TODO: Create Notification records for each recipient. See Section 23.");
-
-    public Task MarkAsReadAsync(Guid notificationId, Guid userId)
-        => throw new NotImplementedException("TODO: Verify RecipientId matches userId before marking read.");
-
-    public Task MarkAllAsReadAsync(Guid userId)
-        => throw new NotImplementedException("TODO: Bulk update all unread notifications for user.");
-}
 
 // ─── ENROLLMENT SERVICE ───────────────────────────────────────────────────────
 /// <summary>Docs: Section 28 — Enrollment Workflow</summary>
