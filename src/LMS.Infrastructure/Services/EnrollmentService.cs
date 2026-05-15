@@ -81,8 +81,17 @@ public class EnrollmentService : IEnrollmentService
     /// </summary>
     public async Task DropEnrollmentAsync(Guid enrollmentId, Guid droppedById)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Soft delete - set Status = Dropped, DroppedAt, DroppedById.");
+        var enrollment = await _db.Enrollments.FindAsync(enrollmentId)
+            ?? throw new KeyNotFoundException($"Enrollment {enrollmentId} not found.");
+
+        if (enrollment.Status != EnrollmentStatus.Active)
+            throw new InvalidOperationException("Only active enrollments can be dropped.");
+
+        enrollment.Status = EnrollmentStatus.Dropped;
+        enrollment.DroppedAt = DateTime.UtcNow;
+        enrollment.DroppedById = droppedById;
+
+        await _db.SaveChangesAsync();
     }
 
     /// <summary>
