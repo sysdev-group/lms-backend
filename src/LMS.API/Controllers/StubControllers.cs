@@ -23,6 +23,7 @@ using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Timetable;
 using LMS.Application.DTOs.Users;
 using LMS.Application.Interfaces;
+using LMS.Domain.Enums;
 using LMS.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -91,7 +92,8 @@ public class UsersController : BaseController
 public class CoursesController : BaseController
 {
     private readonly ICourseService _courseService;
-    public CoursesController(ICourseService courseService) { _courseService = courseService; }
+    private readonly AppDbContext _db;
+    public CoursesController(ICourseService courseService, AppDbContext db) { _courseService = courseService; _db = db; }
 
     /// <summary>Get courses visible to the current user based on their role.</summary>
     [HttpGet]
@@ -135,6 +137,16 @@ public class CoursesController : BaseController
         var result = await _courseService.UpdateCourseAsync(id, request);
         return ApiOk(result);
     }
+
+    /// <summary>Return the semester ID for a course. Used by enrollment form auto-fill.</summary>
+    [HttpGet("{id:guid}/semester-id")]
+    public async Task<IActionResult> GetSemesterId(Guid id)
+    {
+        var row = await _db.Courses.Where(c => c.Id == id)
+            .Select(c => new { c.SemesterId }).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException($"Course {id} not found.");
+        return ApiOk(row.SemesterId);
+    }
 }
 
 // ─── ASSIGNMENTS ──────────────────────────────────────────────────────────────
@@ -145,11 +157,13 @@ public class AssignmentsController : BaseController
 {
     private readonly IAssignmentService _assignmentService;
     private readonly ISubmissionService _submissionService;
+    private readonly AppDbContext _db;
 
-    public AssignmentsController(IAssignmentService assignmentService, ISubmissionService submissionService)
+    public AssignmentsController(IAssignmentService assignmentService, ISubmissionService submissionService, AppDbContext db)
     {
         _assignmentService = assignmentService;
         _submissionService = submissionService;
+        _db = db;
     }
 
     /// <summary>Get all assignments for a course.</summary>
@@ -157,6 +171,28 @@ public class AssignmentsController : BaseController
     public async Task<IActionResult> GetByCourse([FromQuery] Guid courseId)
     {
         var result = await _assignmentService.GetByCourseAsync(courseId);
+        return ApiOk(result);
+    }
+
+    /// <summary>Get all assignments across every course the current student is enrolled in.</summary>
+    [HttpGet("my")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetMine()
+    {
+        var ids = await _db.Enrollments
+            .Where(e => e.StudentId == CurrentUserId && e.Status == EnrollmentStatus.Active)
+            .Select(e => e.CourseId).ToListAsync();
+        var result = await _db.Assignments.AsNoTracking()
+            .Where(a => ids.Contains(a.CourseId))
+            .Select(a => new AssignmentDto
+            {
+                Id = a.Id, Title = a.Title, Description = a.Description,
+                Deadline = a.Deadline, IsDeadlinePassed = DateTime.UtcNow > a.Deadline,
+                MaxMarks = a.MaxMarks, AllowResubmission = a.AllowResubmission,
+                AllowLateSubmission = a.AllowLateSubmission, TurnitinEnabled = a.TurnitinEnabled,
+                CourseName = a.Course.Title, SubmissionCount = a.Submissions.Count()
+            })
+            .ToListAsync();
         return ApiOk(result);
     }
 
