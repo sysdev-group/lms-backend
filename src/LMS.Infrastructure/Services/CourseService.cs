@@ -15,10 +15,14 @@ namespace LMS.Infrastructure.Services;
 public class CourseService : ICourseService
 {
     private readonly AppDbContext _db;
+    private readonly IAuditService _audit;
+    private readonly ICurrentUserService _currentUser;
 
-    public CourseService(AppDbContext db)
+    public CourseService(AppDbContext db, IAuditService audit, ICurrentUserService currentUser)
     {
         _db = db;
+        _audit = audit;
+        _currentUser = currentUser;
     }
 
     /// <inheritdoc />
@@ -77,6 +81,9 @@ public class CourseService : ICourseService
         _db.Courses.Add(course);
         await _db.SaveChangesAsync();
 
+        await _audit.LogAsync("Create", "Course", course.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"Course '{course.Title}' created", null, null);
+
         return await GetByIdAsync(course.Id);
     }
 
@@ -100,6 +107,10 @@ public class CourseService : ICourseService
         if (request.IsArchived.HasValue) course.IsArchived = request.IsArchived.Value;
 
         await _db.SaveChangesAsync();
+
+        await _audit.LogAsync("Update", "Course", course.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"Course '{course.Title}' updated", null, null);
+
         return await GetByIdAsync(course.Id);
     }
 

@@ -24,11 +24,15 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IAuditService _audit;
+    private readonly ICurrentUserService _currentUser;
 
-    public AuthService(AppDbContext db, IConfiguration config)
+    public AuthService(AppDbContext db, IConfiguration config, IAuditService audit, ICurrentUserService currentUser)
     {
         _db = db;
         _config = config;
+        _audit = audit;
+        _currentUser = currentUser;
     }
 
     /// <inheritdoc />
@@ -47,6 +51,9 @@ public class AuthService : IAuthService
 
         await _db.SaveChangesAsync();
 
+        await _audit.LogAsync("Login", "User", user.Id.ToString(), user.Id,
+            user.Role.ToString(), null, $"User {user.Email} logged in successfully", ipAddress, null);
+
         return BuildLoginResponse(accessToken, rawToken, user);
     }
 
@@ -61,6 +68,9 @@ public class AuthService : IAuthService
         {
             token.RevokedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+
+            await _audit.LogAsync("Logout", "User", userId.ToString(), userId,
+                _currentUser.Role.ToString(), null, "User logged out", null, null);
         }
     }
 

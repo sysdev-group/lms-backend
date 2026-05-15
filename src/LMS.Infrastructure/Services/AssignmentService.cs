@@ -14,11 +14,13 @@ public class AssignmentService : IAssignmentService
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAuditService _audit;
 
-    public AssignmentService(AppDbContext db, ICurrentUserService currentUser)
+    public AssignmentService(AppDbContext db, ICurrentUserService currentUser, IAuditService audit)
     {
         _db = db;
         _currentUser = currentUser;
+        _audit = audit;
     }
 
     /// <summary>
@@ -101,6 +103,9 @@ public class AssignmentService : IAssignmentService
         _db.Assignments.Add(assignment);
         await _db.SaveChangesAsync();
 
+        await _audit.LogAsync("Create", "Assignment", assignment.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"Assignment '{assignment.Title}' created", null, null);
+
         assignment.Course = course;
         return MapToDto(assignment, submissionCount: 0);
     }
@@ -131,6 +136,9 @@ public class AssignmentService : IAssignmentService
         if (request.AllowLateSubmission.HasValue) assignment.AllowLateSubmission = request.AllowLateSubmission.Value;
 
         await _db.SaveChangesAsync();
+
+        await _audit.LogAsync("Update", "Assignment", assignment.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"Assignment '{assignment.Title}' updated", null, null);
 
         var submissionCount = await _db.Submissions.CountAsync(s => s.AssignmentId == id);
         return MapToDto(assignment, submissionCount);

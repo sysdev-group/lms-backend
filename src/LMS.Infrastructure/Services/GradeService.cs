@@ -14,11 +14,13 @@ public class GradeService : IGradeService
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAuditService _audit;
 
-    public GradeService(AppDbContext db, ICurrentUserService currentUser)
+    public GradeService(AppDbContext db, ICurrentUserService currentUser, IAuditService audit)
     {
         _db = db;
         _currentUser = currentUser;
+        _audit = audit;
     }
 
     /// <summary>
@@ -112,6 +114,9 @@ public class GradeService : IGradeService
             });
 
             await _db.SaveChangesAsync();
+
+            await _audit.LogAsync("Update", "Grade", gradeId.ToString(), _currentUser.UserId,
+                _currentUser.Role.ToString(), null, $"Grade published for submission {grade.Submission.Id}", null, null);
         }
     }
 
@@ -153,6 +158,9 @@ public class GradeService : IGradeService
         }
 
         await _db.SaveChangesAsync();
+
+        await _audit.LogAsync("Update", "Grade", courseId.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"All grades published for course {courseId}", null, null);
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────

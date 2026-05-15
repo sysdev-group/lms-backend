@@ -21,6 +21,7 @@ public static class DbSeeder
         await SeedAssignmentsAsync(db);
         await SeedTimetableSessionsAsync(db);
         await SeedProgrammesAsync(db);
+        await SeedAuditLogsAsync(db);
     }
 
     // ─── Semester ─────────────────────────────────────────────────────────────
@@ -285,6 +286,38 @@ public static class DbSeeder
         if (toAdd.Count == 0) return;
 
         db.TimetableSessions.AddRange(toAdd);
+        await db.SaveChangesAsync();
+    }
+
+    // ─── Audit Logs ───────────────────────────────────────────────────────────
+
+    private static async Task SeedAuditLogsAsync(AppDbContext db)
+    {
+        if (await db.AuditLogs.AnyAsync()) return;
+
+        var admin    = await db.Users.FirstAsync(u => u.Email == "admin@lms.com");
+        var lecturer = await db.Users.FirstAsync(u => u.Email == "lecturer@lms.com");
+        var student1 = await db.Users.FirstAsync(u => u.Email == "student1@lms.com");
+        var student2 = await db.Users.FirstAsync(u => u.Email == "student2@lms.com");
+        var cs101    = await db.Courses.FirstAsync(c => c.Code == "CS101");
+        var cs201    = await db.Courses.FirstAsync(c => c.Code == "CS201");
+        var now      = DateTime.UtcNow;
+
+        var entries = new[]
+        {
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-6), Action = "Login",  EntityType = "User",       EntityId = admin.Id.ToString(),    UserId = admin.Id,    UserRole = "Admin",    After = "User admin@lms.com logged in successfully",                   IpAddress = "127.0.0.1" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-5), Action = "Create", EntityType = "Course",     EntityId = cs101.Id.ToString(),    UserId = admin.Id,    UserRole = "Admin",    After = "Course 'Introduction to Programming' created" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-5), Action = "Create", EntityType = "Course",     EntityId = cs201.Id.ToString(),    UserId = admin.Id,    UserRole = "Admin",    After = "Course 'Data Structures' created" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-4), Action = "Create", EntityType = "Enrollment", EntityId = student1.Id.ToString(), UserId = admin.Id,    UserRole = "Admin",    After = $"Student {student1.Id} enrolled in course {cs101.Id}" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-4), Action = "Create", EntityType = "Enrollment", EntityId = student2.Id.ToString(), UserId = admin.Id,    UserRole = "Admin",    After = $"Student {student2.Id} enrolled in course {cs101.Id}" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-3), Action = "Login",  EntityType = "User",       EntityId = lecturer.Id.ToString(), UserId = lecturer.Id, UserRole = "Lecturer", After = "User lecturer@lms.com logged in successfully",                 IpAddress = "127.0.0.1" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-3), Action = "Create", EntityType = "Assignment", EntityId = cs101.Id.ToString(),    UserId = lecturer.Id, UserRole = "Lecturer", After = "Assignment 'Hello World Project' created" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-2), Action = "Create", EntityType = "Assignment", EntityId = cs201.Id.ToString(),    UserId = lecturer.Id, UserRole = "Lecturer", After = "Assignment 'Linked List Implementation' created" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddDays(-1), Action = "Login",  EntityType = "User",       EntityId = student1.Id.ToString(), UserId = student1.Id, UserRole = "Student",  After = "User student1@lms.com logged in successfully",                 IpAddress = "127.0.0.1" },
+            new AuditLog { Id = Guid.NewGuid(), Timestamp = now.AddHours(-2), Action = "Login", EntityType = "User",       EntityId = student2.Id.ToString(), UserId = student2.Id, UserRole = "Student",  After = "User student2@lms.com logged in successfully",                 IpAddress = "127.0.0.1" },
+        };
+
+        db.AuditLogs.AddRange(entries);
         await db.SaveChangesAsync();
     }
 

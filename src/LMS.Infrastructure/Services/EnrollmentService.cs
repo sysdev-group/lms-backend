@@ -14,14 +14,16 @@ public class EnrollmentService : IEnrollmentService
 {
     private readonly AppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAuditService _audit;
 
     /// <summary>
     /// Creates an enrollment service with database and current-user dependencies.
     /// </summary>
-    public EnrollmentService(AppDbContext db, ICurrentUserService currentUser)
+    public EnrollmentService(AppDbContext db, ICurrentUserService currentUser, IAuditService audit)
     {
         _db = db;
         _currentUser = currentUser;
+        _audit = audit;
     }
 
     /// <summary>
@@ -70,6 +72,9 @@ public class EnrollmentService : IEnrollmentService
             throw new InvalidOperationException("Student is already enrolled in this course for the semester.");
         }
 
+        await _audit.LogAsync("Create", "Enrollment", enrollment.Id.ToString(), enrolledById,
+            _currentUser.Role.ToString(), null, $"Student {request.StudentId} enrolled in course {request.CourseId}", null, null);
+
         enrollment.Student = student;
         enrollment.Course = course;
         return MapToDto(enrollment);
@@ -86,11 +91,17 @@ public class EnrollmentService : IEnrollmentService
         if (enrollment.Status != EnrollmentStatus.Active)
             throw new InvalidOperationException("Only active enrollments can be dropped.");
 
+        var studentId = enrollment.StudentId;
+        var courseId = enrollment.CourseId;
+
         enrollment.Status = EnrollmentStatus.Dropped;
         enrollment.DroppedAt = DateTime.UtcNow;
         enrollment.DroppedById = droppedById;
 
         await _db.SaveChangesAsync();
+
+        await _audit.LogAsync("Delete", "Enrollment", enrollmentId.ToString(), droppedById,
+            _currentUser.Role.ToString(), null, $"Student {studentId} unenrolled from course {courseId}", null, null);
     }
 
     /// <summary>

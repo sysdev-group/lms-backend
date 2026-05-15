@@ -18,12 +18,14 @@ public class UserService : IUserService
     private readonly AppDbContext _db;
     private readonly IAuthService _authService;
     private readonly ICurrentUserService _currentUser;
+    private readonly IAuditService _audit;
 
-    public UserService(AppDbContext db, IAuthService authService, ICurrentUserService currentUser)
+    public UserService(AppDbContext db, IAuthService authService, ICurrentUserService currentUser, IAuditService audit)
     {
         _db = db;
         _authService = authService;
         _currentUser = currentUser;
+        _audit = audit;
     }
 
     /// <summary>
@@ -118,6 +120,9 @@ public class UserService : IUserService
             throw new InvalidOperationException($"A user with email '{email}' already exists.");
         }
 
+        await _audit.LogAsync("Create", "User", user.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"User '{user.Email}' created with role {user.Role}", null, null);
+
         // TODO: Send welcome email with password-reset link via IEmailService. See Section 22.
         return MapToDto(user);
     }
@@ -161,6 +166,10 @@ public class UserService : IUserService
         {
             throw new InvalidOperationException($"Email '{user.Email}' is already in use.");
         }
+
+        await _audit.LogAsync("Update", "User", user.Id.ToString(), _currentUser.UserId,
+            _currentUser.Role.ToString(), null, $"User '{user.Email}' updated", null, null);
+
         return MapToDto(user);
     }
 
