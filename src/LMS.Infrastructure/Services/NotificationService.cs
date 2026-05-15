@@ -1,5 +1,6 @@
 using LMS.Application.DTOs.Notifications;
 using LMS.Application.Interfaces;
+using LMS.Domain.Entities;
 using LMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,8 +52,39 @@ public class NotificationService : INotificationService
     /// </summary>
     public async Task SendAsync(SendNotificationRequest request, Guid senderId)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Implement notification creation.");
+        var recipientIds = request.RecipientIds
+            .Distinct()
+            .ToList();
+
+        if (recipientIds.Count == 0)
+            throw new ArgumentException("At least one recipient is required.", nameof(request));
+
+        var existingRecipientIds = await _db.Users
+            .AsNoTracking()
+            .Where(u => recipientIds.Contains(u.Id))
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        var missingRecipientIds = recipientIds.Except(existingRecipientIds).ToList();
+        if (missingRecipientIds.Count > 0)
+            throw new KeyNotFoundException($"Recipient {missingRecipientIds[0]} not found.");
+
+        var now = DateTime.UtcNow;
+        var notifications = recipientIds.Select(recipientId => new Notification
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title,
+            Body = request.Body,
+            Priority = request.Priority,
+            IsRead = false,
+            CreatedAt = now,
+            ExpiresAt = request.ExpiresAt,
+            RecipientId = recipientId,
+            SenderId = senderId
+        }).ToList();
+
+        _db.Notifications.AddRange(notifications);
+        await _db.SaveChangesAsync();
     }
 
     /// <summary>
