@@ -29,8 +29,51 @@ public class EnrollmentService : IEnrollmentService
     /// </summary>
     public async Task<EnrollmentDto> EnrollStudentAsync(EnrollStudentRequest request, Guid enrolledById)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Check duplicate, check enrollment deadline, check capacity.");
+        var student = await _db.Users
+            .FirstOrDefaultAsync(u => u.Id == request.StudentId && u.Role == UserRole.Student && u.IsActive)
+            ?? throw new KeyNotFoundException($"Student {request.StudentId} not found.");
+
+        var course = await _db.Courses
+            .FirstOrDefaultAsync(c => c.Id == request.CourseId)
+            ?? throw new KeyNotFoundException($"Course {request.CourseId} not found.");
+
+        if (course.SemesterId != request.SemesterId)
+            throw new ArgumentException("Course does not belong to the specified semester.", nameof(request));
+
+        var alreadyEnrolled = await _db.Enrollments.AnyAsync(e =>
+            e.StudentId == request.StudentId &&
+            e.CourseId == request.CourseId &&
+            e.SemesterId == request.SemesterId &&
+            e.Status == EnrollmentStatus.Active);
+
+        if (alreadyEnrolled)
+            throw new InvalidOperationException("Student is already actively enrolled in this course.");
+
+        var enrollment = new Enrollment
+        {
+            Id = Guid.NewGuid(),
+            StudentId = request.StudentId,
+            CourseId = request.CourseId,
+            SemesterId = request.SemesterId,
+            EnrolledById = enrolledById,
+            Status = EnrollmentStatus.Active,
+            EnrolledAt = DateTime.UtcNow
+        };
+
+        _db.Enrollments.Add(enrollment);
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("Student is already enrolled in this course for the semester.");
+        }
+
+        enrollment.Student = student;
+        enrollment.Course = course;
+        return MapToDto(enrollment);
     }
 
     /// <summary>
