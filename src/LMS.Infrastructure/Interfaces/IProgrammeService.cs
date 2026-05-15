@@ -1,3 +1,4 @@
+using LMS.Application.DTOs.Courses;
 using LMS.Infrastructure.DTOs;
 
 namespace LMS.Infrastructure.Interfaces;
@@ -20,4 +21,10 @@ public interface IProgrammeService
     /// Throws <see cref="ArgumentException"/> if required fields are missing or invalid.
     /// </summary>
     Task<ProgrammeDto> CreateAsync(CreateProgrammeRequest request);
+
+    /// <summary>
+    /// Returns all courses belonging to the given programme via the ProgrammeId shadow property.
+    /// Returns an empty list if the programme has no linked courses.
+    /// </summary>
+    Task<List<CourseDto>> GetCoursesAsync(Guid programmeId);
 }

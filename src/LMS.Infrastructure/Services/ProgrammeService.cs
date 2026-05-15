@@ -1,3 +1,5 @@
+using LMS.Application.DTOs.Courses;
+using LMS.Domain.Enums;
 using LMS.Infrastructure.Data;
 using LMS.Infrastructure.DTOs;
 using LMS.Infrastructure.Entities;
@@ -71,6 +73,31 @@ public class ProgrammeService : IProgrammeService
         await _db.SaveChangesAsync();
 
         return await GetByIdAsync(programme.Id);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<CourseDto>> GetCoursesAsync(Guid programmeId)
+    {
+        var courses = await _db.Courses
+            .AsNoTracking()
+            .Include(c => c.Lecturer)
+            .Include(c => c.Semester)
+            .Include(c => c.Enrollments)
+            .Where(c => EF.Property<Guid?>(c, "ProgrammeId") == programmeId)
+            .ToListAsync();
+
+        return courses.Select(c => new CourseDto
+        {
+            Id = c.Id,
+            Code = c.Code,
+            Title = c.Title,
+            Description = c.Description,
+            CreditHours = c.CreditHours,
+            IsArchived = c.IsArchived,
+            LecturerName = $"{c.Lecturer.FirstName} {c.Lecturer.LastName}",
+            SemesterName = c.Semester.Name,
+            EnrolledStudentCount = c.Enrollments.Count(e => e.Status == EnrollmentStatus.Active)
+        }).ToList();
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────

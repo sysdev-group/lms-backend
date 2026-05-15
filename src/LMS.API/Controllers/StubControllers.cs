@@ -23,8 +23,10 @@ using LMS.Application.DTOs.Notifications;
 using LMS.Application.DTOs.Timetable;
 using LMS.Application.DTOs.Users;
 using LMS.Application.Interfaces;
+using LMS.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.API.Controllers;
 
@@ -192,7 +194,13 @@ public class AssignmentsController : BaseController
 public class SubmissionsController : BaseController
 {
     private readonly ISubmissionService _submissionService;
-    public SubmissionsController(ISubmissionService submissionService) { _submissionService = submissionService; }
+    private readonly AppDbContext _db;
+
+    public SubmissionsController(ISubmissionService submissionService, AppDbContext db)
+    {
+        _submissionService = submissionService;
+        _db = db;
+    }
 
     /// <summary>Submit an assignment. Student only.</summary>
     [HttpPost]
@@ -217,6 +225,28 @@ public class SubmissionsController : BaseController
     public async Task<IActionResult> GetByAssignment(Guid assignmentId)
     {
         var result = await _submissionService.GetByAssignmentAsync(assignmentId);
+        return ApiOk(result);
+    }
+
+    /// <summary>Get all submissions made by the currently authenticated student.</summary>
+    [HttpGet("my")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetMine()
+    {
+        var result = await _db.Submissions
+            .AsNoTracking()
+            .Where(s => s.StudentId == CurrentUserId)
+            .Select(s => new SubmissionDto
+            {
+                Id = s.Id,
+                StudentName = s.Student.FirstName + " " + s.Student.LastName,
+                Status = s.Status.ToString(),
+                SubmittedAt = s.SubmittedAt,
+                IsLate = s.IsLate,
+                FileName = s.File != null ? s.File.OriginalName : null,
+                IsGraded = s.Grade != null
+            })
+            .ToListAsync();
         return ApiOk(result);
     }
 }
@@ -274,6 +304,14 @@ public class TimetableController : BaseController
     private readonly ITimetableService _timetableService;
     public TimetableController(ITimetableService timetableService) { _timetableService = timetableService; }
 
+    /// <summary>Get all timetable sessions visible to the current user (role-filtered).</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _timetableService.GetByBatchAsync(Guid.Empty);
+        return ApiOk(result);
+    }
+
     /// <summary>Get timetable sessions for a semester/batch.</summary>
     [HttpGet("batch/{semesterId:guid}")]
     public async Task<IActionResult> GetByBatch(Guid semesterId)
@@ -299,6 +337,15 @@ public class TimetableController : BaseController
         await _timetableService.PublishSessionAsync(id);
         return ApiOk<object?>(null, "Session published.");
     }
+
+    /// <summary>Delete an unpublished timetable session. Lecturer (own sessions) or Admin.</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Lecturer,Admin")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _timetableService.DeleteSessionAsync(id);
+        return ApiNoContent();
+    }
 }
 
 // ─── ATTENDANCE ───────────────────────────────────────────────────────────────
@@ -317,6 +364,15 @@ public class AttendanceController : BaseController
     {
         await _attendanceService.MarkAttendanceAsync(request, CurrentUserId);
         return ApiOk<object?>(null, "Attendance recorded.");
+    }
+
+    /// <summary>Get all attendance records for a specific attendance session. Lecturer or Admin only.</summary>
+    [HttpGet("session/{sessionId:guid}")]
+    [Authorize(Roles = "Lecturer,Admin")]
+    public async Task<IActionResult> GetSessionRecords(Guid sessionId)
+    {
+        var result = await _attendanceService.GetSessionRecordsAsync(sessionId);
+        return ApiOk(result);
     }
 
     /// <summary>Get attendance summary for a student.</summary>

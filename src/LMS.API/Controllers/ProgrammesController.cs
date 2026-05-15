@@ -1,3 +1,4 @@
+using LMS.Application.DTOs.Courses;
 using LMS.Infrastructure.DTOs;
 using LMS.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -44,5 +45,13 @@ public class ProgrammesController : BaseController
     {
         var result = await _programmeService.CreateAsync(request);
         return ApiCreated(result);
+    }
+
+    /// <summary>Get all courses linked to a programme via the ProgrammeId shadow property.</summary>
+    [HttpGet("{id:guid}/courses")]
+    public async Task<IActionResult> GetCourses(Guid id)
+    {
+        var result = await _programmeService.GetCoursesAsync(id);
+        return ApiOk(result);
     }
 }

@@ -32,9 +32,9 @@ public class TimetableService : ITimetableService
         var userId = _currentUser.UserId;
         var role = _currentUser.Role;
 
-        var query = _db.TimetableSessions
-            .Where(ts => ts.SemesterId == semesterId)
-            .AsQueryable();
+        var query = semesterId == Guid.Empty
+            ? _db.TimetableSessions.AsNoTracking().AsQueryable()
+            : _db.TimetableSessions.AsNoTracking().Where(ts => ts.SemesterId == semesterId).AsQueryable();
 
         if (role == UserRole.Student)
         {
