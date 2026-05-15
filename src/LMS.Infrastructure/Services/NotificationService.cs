@@ -1,6 +1,7 @@
 using LMS.Application.DTOs.Notifications;
 using LMS.Application.Interfaces;
 using LMS.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Infrastructure.Services;
 
@@ -24,9 +25,25 @@ public class NotificationService : INotificationService
     /// Retrieves notifications for a user, optionally limited to unread notifications.
     /// </summary>
     public async Task<List<NotificationDto>> GetForUserAsync(Guid userId, bool unreadOnly = false)
+        => await GetNotificationsAsync(userId, unreadOnly);
+
+    /// <summary>
+    /// Retrieves notifications for the specified user ordered from newest to oldest.
+    /// </summary>
+    private async Task<List<NotificationDto>> GetNotificationsAsync(Guid userId, bool unreadOnly)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Implement notification retrieval.");
+        var query = _db.Notifications
+            .AsNoTracking()
+            .Where(n => n.RecipientId == userId);
+
+        if (unreadOnly)
+            query = query.Where(n => !n.IsRead);
+
+        var notifications = await query
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+
+        return notifications.Select(MapToDto).ToList();
     }
 
     /// <summary>
@@ -55,4 +72,14 @@ public class NotificationService : INotificationService
         await Task.CompletedTask;
         throw new NotImplementedException("TODO: Implement bulk notification read-state update.");
     }
+
+    private static NotificationDto MapToDto(Domain.Entities.Notification notification) => new()
+    {
+        Id = notification.Id,
+        Title = notification.Title,
+        Body = notification.Body,
+        Priority = notification.Priority.ToString(),
+        IsRead = notification.IsRead,
+        CreatedAt = notification.CreatedAt
+    };
 }
