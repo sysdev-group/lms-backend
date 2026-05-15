@@ -1,7 +1,9 @@
 using LMS.Application.DTOs.Enrollment;
 using LMS.Application.Interfaces;
+using LMS.Domain.Entities;
 using LMS.Domain.Enums;
 using LMS.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Infrastructure.Services;
 
@@ -48,8 +50,15 @@ public class EnrollmentService : IEnrollmentService
         if (_currentUser.Role == UserRole.Student && _currentUser.UserId != studentId)
             throw new UnauthorizedAccessException("You may only view your own data.");
 
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Include course and semester details.");
+        var enrollments = await _db.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Where(e => e.StudentId == studentId)
+            .OrderByDescending(e => e.EnrolledAt)
+            .ToListAsync();
+
+        return enrollments.Select(MapToDto).ToList();
     }
 
     /// <summary>
@@ -57,7 +66,24 @@ public class EnrollmentService : IEnrollmentService
     /// </summary>
     public async Task<List<EnrollmentDto>> GetByCourseAsync(Guid courseId)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Include student details, filter active enrollments.");
+        var enrollments = await _db.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Where(e => e.CourseId == courseId && e.Status == EnrollmentStatus.Active)
+            .OrderBy(e => e.Student.LastName)
+            .ThenBy(e => e.Student.FirstName)
+            .ToListAsync();
+
+        return enrollments.Select(MapToDto).ToList();
     }
+
+    private static EnrollmentDto MapToDto(Enrollment enrollment) => new()
+    {
+        Id = enrollment.Id,
+        StudentName = $"{enrollment.Student.FirstName} {enrollment.Student.LastName}",
+        CourseName = enrollment.Course.Title,
+        Status = enrollment.Status.ToString(),
+        EnrolledAt = enrollment.EnrolledAt
+    };
 }
