@@ -60,8 +60,19 @@ public class NotificationService : INotificationService
     /// </summary>
     public async Task MarkAsReadAsync(Guid notificationId, Guid userId)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException("TODO: Implement notification read-state update.");
+        var notification = await _db.Notifications.FindAsync(notificationId)
+            ?? throw new KeyNotFoundException($"Notification {notificationId} not found.");
+
+        if (notification.RecipientId != userId)
+            throw new UnauthorizedAccessException("You may only mark your own notifications as read.");
+
+        if (notification.IsRead)
+            return;
+
+        notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
     }
 
     /// <summary>
