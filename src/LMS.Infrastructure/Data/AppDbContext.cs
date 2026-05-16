@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -180,6 +181,18 @@ public class AppDbContext : DbContext
             e.HasIndex(a => a.EntityType);
             e.HasIndex(a => a.UserId);
             // No FK to User — logs must survive user deletion
+        });
+
+        // ─── PasswordResetToken ───────────────────────────────────────────────────
+        modelBuilder.Entity<PasswordResetToken>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.TokenHash).IsRequired().HasMaxLength(64);
+            e.HasIndex(t => t.TokenHash).IsUnique();
+            e.HasOne<User>()
+             .WithMany()
+             .HasForeignKey(t => t.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ─── Programme ────────────────────────────────────────────────────────

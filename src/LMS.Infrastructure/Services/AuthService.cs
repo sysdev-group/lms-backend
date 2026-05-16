@@ -6,6 +6,7 @@ using LMS.Application.DTOs.Auth;
 using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
 using LMS.Infrastructure.Data;
+using LMS.Infrastructure.Entities;
 using LMS.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -113,14 +114,34 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request, string ipAddress)
     {
-        // Always return success — never reveal whether email exists (prevents enumeration)
         var user = await _db.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant());
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant() && u.IsActive);
 
-        if (user is null) return;
+        if (user is null) return; // silent — never reveal whether email exists
 
-        // TODO: add PasswordResetTokens table, then generate + hash a real GUID token here
-        var resetLink = $"http://localhost:4200/auth/reset-password?token=placeholder";
+        // Invalidate any outstanding unused tokens for this user
+        var existing = await _db.PasswordResetTokens
+            .Where(t => t.UserId == user.Id && t.UsedAt == null)
+            .ToListAsync();
+        _db.PasswordResetTokens.RemoveRange(existing);
+
+        var rawToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"); // 64 chars
+        var tokenHash = HashToken(rawToken);
+
+        _db.PasswordResetTokens.Add(new PasswordResetToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = tokenHash,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+            CreatedAt = DateTime.UtcNow,
+            IpAddress = ipAddress
+        });
+
+        await _db.SaveChangesAsync();
+
+        var resetLink = $"http://localhost:4200/auth/reset-password?token={rawToken}";
         await _emailService.SendPasswordResetEmailAsync(
             user.Email,
             $"{user.FirstName} {user.LastName}",
@@ -130,10 +151,31 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task ResetPasswordAsync(ResetPasswordRequest request, string ipAddress)
     {
-        // TODO: Validate reset token, update password, revoke all refresh tokens
-        // See Section 29 of system documentation for full spec
-        await Task.CompletedTask;
-        throw new NotImplementedException("Password reset — to be implemented. See Section 29.");
+        var tokenHash = HashToken(request.Token);
+
+        var resetToken = await _db.PasswordResetTokens
+            .FirstOrDefaultAsync(t =>
+                t.TokenHash == tokenHash &&
+                t.UsedAt == null &&
+                t.ExpiresAt > DateTime.UtcNow)
+            ?? throw new InvalidOperationException("Reset token is invalid or has expired.");
+
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Id == resetToken.UserId)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        resetToken.UsedAt = DateTime.UtcNow;
+
+        // Revoke all active refresh tokens for security
+        var refreshTokens = await _db.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null)
+            .ToListAsync();
+
+        foreach (var rt in refreshTokens)
+            rt.RevokedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
