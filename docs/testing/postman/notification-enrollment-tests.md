@@ -1,189 +1,57 @@
 # Notification and Enrollment API Postman Tests
 
-## Overview
+## Purpose
 
-This document contains the Postman API testing results for the Notification and Enrollment endpoints implemented in the LMS Backend system.
+This Postman collection verifies the LMS Notification and Enrollment API endpoints for retrieving notifications, marking notifications as read, and retrieving enrollment records for a selected student.
 
-Testing was performed using Postman with authenticated Bearer Token authorization. Automated Postman test scripts were added to each request, and successful API responses together with their test assertions were verified.
+## Files
 
----
+- `lms-notification-enrollment-tests.postman_collection.json`
+- `lms-notification-enrollment-tests.postman_environment.json`
 
-## Authentication
+## Required Postman Environment Variables
 
-Authentication was performed through the login endpoint:
+| Variable | Example value | Notes |
+| --- | --- | --- |
+| `baseUrl` | `https://localhost:5001/api/v1` | API base URL used by every request. |
+| `token` | `paste-valid-jwt-token-here` | Replace with a valid JWT access token. Do not commit real tokens. |
+| `studentId` | `ed87eae7-a989-4b0d-842f-ac97a230f6bb` | Existing student id used by the enrollment lookup request. |
 
-```text
-POST /api/v1/auth/login
-```
+## How to Get a JWT Token From Login
 
-Request body:
+1. Start the backend API.
+2. In Postman, send a login request to `POST {{baseUrl}}/auth/login`.
+3. Use the test account credentials required for the environment.
+4. Copy the JWT access token returned in the login response.
+5. Paste the token into the `token` environment variable.
 
-```json
-{
-  "email": "admin@lms.com",
-  "password": "Admin@123"
-}
-```
+Do not store real passwords or real JWT tokens in the collection or environment files.
 
-After successful login, the API returned a JWT access token. Bearer Token authentication was then used for all protected Notification and Enrollment API endpoints tested in Postman.
+## How to Run Each Test
 
----
+1. Open Postman.
+2. Import `lms-notification-enrollment-tests.postman_collection.json`.
+3. Import `lms-notification-enrollment-tests.postman_environment.json`.
+4. Select the imported environment.
+5. Replace `token` with a valid JWT token.
+6. Confirm that `studentId` contains an existing student id.
+7. Run each request individually, or run the full collection.
 
-## Tested Endpoints
+Request definitions, Postman scripts, authorization configuration, and environment variables are included in the exported Postman collection and environment JSON files.
 
-### 1. GET `/api/v1/notifications`
+## Expected Results
 
-**Purpose:**  
-Retrieve notifications for the authenticated user.
+| Request | Expected result |
+| --- | --- |
+| `GET {{baseUrl}}/notifications` | Returns `200 OK` with notifications for the authenticated user. Tests confirm a successful response. |
+| `PATCH {{baseUrl}}/notifications/mark-all-read` | Returns `200 OK` after marking all notifications as read for the authenticated user. Tests confirm the successful update. |
+| `GET {{baseUrl}}/enrollment/student/{{studentId}}` | Returns `200 OK` with enrollment records for the selected student. Tests confirm enrollment data is returned successfully. |
 
-**Request Type:**  
-`GET`
+## Screenshot Checklist
 
-**Request Body:**  
-None
+Capture these screenshots for the report:
 
-**Post-response Postman Test Script:**
-
-```javascript
-pm.test("Status code is 200", function () {
-    pm.response.to.have.status(200);
-});
-
-pm.test("Response success is true", function () {
-    let jsonData = pm.response.json();
-    pm.expect(jsonData.success).to.eql(true);
-});
-```
-
-**Expected Result:**
-
-- `200 OK`
-- Notifications returned successfully
-- Postman tests passed successfully `(2/2)`
-
----
-
-### 2. PATCH `/api/v1/notifications/mark-all-read`
-
-**Purpose:**  
-Mark all notifications as read for the authenticated user.
-
-**Request Type:**  
-`PATCH`
-
-**Request Body:**  
-None
-
-**Post-response Postman Test Script:**
-
-```javascript
-pm.test("Status code is 200", function () {
-    pm.response.to.have.status(200);
-});
-
-pm.test("Notifications marked as read", function () {
-    let jsonData = pm.response.json();
-    pm.expect(jsonData.success).to.eql(true);
-});
-```
-
-**Expected Result:**
-
-- `200 OK`
-- Notifications marked as read successfully
-- Postman tests passed successfully `(2/2)`
-
----
-
-### 3. GET `/api/v1/enrollment/student/{studentId}`
-
-**Purpose:**  
-Retrieve enrollment records for a selected student.
-
-**Request Type:**  
-`GET`
-
-**Student ID Used:**
-
-```text
-ed87eae7-a989-4b0d-842f-ac97a230f6bb
-```
-
-**Endpoint Used:**
-
-```text
-GET /api/v1/enrollment/student/ed87eae7-a989-4b0d-842f-ac97a230f6bb
-```
-
-**Request Body:**  
-None
-
-**Post-response Postman Test Script:**
-
-```javascript
-pm.test("Status code is 200", function () {
-    pm.response.to.have.status(200);
-});
-
-pm.test("Enrollment data returned", function () {
-    let jsonData = pm.response.json();
-    pm.expect(jsonData.success).to.eql(true);
-});
-```
-
-**Expected Result:**
-
-- `200 OK`
-- Enrollment data returned successfully
-- Postman tests passed successfully `(2/2)`
-
----
-
-## Postman Test Scripts
-
-Automated Postman test scripts were added after each request to confirm that:
-
-- the API returned a successful `200 OK` status code
-- the response body contained `success: true`
-- each endpoint produced the expected successful result
-
-These scripts provided repeatable verification of the tested Notification and Enrollment workflows.
-
----
-
-## Test Results
-
-All tested endpoints returned successful responses, and the automated Postman assertions passed successfully. The API responses matched the expected outcomes for each request.
-
-The completed testing confirmed:
-
-- successful `200 OK` responses
-- successful notification retrieval and update operations
-- successful retrieval of student enrollment data
-- authenticated endpoint access functioning correctly through JWT Bearer Token authorization
-
----
-
-## Screenshot Evidence
-
-Screenshots were captured to show successful endpoint execution, request URLs, authenticated requests, response bodies, and Postman Test Results with passing assertions.
-
-### GET Notifications
-
-![GET Notifications](screenshots/get-notifications.png)
-
-### PATCH Mark All Notifications Read
-
-![PATCH Mark All Notifications Read](screenshots/mark-all-read.png)
-
-### GET Student Enrollments
-
-![GET Student Enrollments](screenshots/get-student-enrollments.png)
-
----
-
-## Tools Used
-
-- Postman
-- ASP.NET Core LMS Backend API
-- JWT Bearer Token Authentication
+1. `GET /notifications` successful response.
+2. `PATCH /notifications/mark-all-read` successful response.
+3. `GET /enrollment/student/{studentId}` successful response.
+4. Postman test results tab showing tests passed.
