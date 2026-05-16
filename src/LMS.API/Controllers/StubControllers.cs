@@ -174,14 +174,28 @@ public class AssignmentsController : BaseController
         return ApiOk(result);
     }
 
-    /// <summary>Get all assignments across every course the current student is enrolled in.</summary>
+    /// <summary>Get all assignments across every course the caller is associated with.
+    /// Students: courses they are actively enrolled in.
+    /// Lecturers: courses they own.</summary>
     [HttpGet("my")]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,Lecturer")]
     public async Task<IActionResult> GetMine()
     {
-        var ids = await _db.Enrollments
-            .Where(e => e.StudentId == CurrentUserId && e.Status == EnrollmentStatus.Active)
-            .Select(e => e.CourseId).ToListAsync();
+        List<Guid> ids;
+        if (CurrentUserRole == "Lecturer")
+        {
+            ids = await _db.Courses
+                .Where(c => c.LecturerId == CurrentUserId)
+                .Select(c => c.Id)
+                .ToListAsync();
+        }
+        else
+        {
+            ids = await _db.Enrollments
+                .Where(e => e.StudentId == CurrentUserId && e.Status == EnrollmentStatus.Active)
+                .Select(e => e.CourseId).ToListAsync();
+        }
+
         var result = await _db.Assignments.AsNoTracking()
             .Where(a => ids.Contains(a.CourseId))
             .Select(a => new AssignmentDto
