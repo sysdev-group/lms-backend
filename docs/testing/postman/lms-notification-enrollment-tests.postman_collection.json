@@ -1,0 +1,198 @@
+{
+  "info": {
+    "_postman_id": "e1b82304-2e41-4366-85ae-0f0d2970147d",
+    "name": "LMS API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54867634",
+    "_collection_link": "https://go.postman.co/collection/54867634-e1b82304-2e41-4366-85ae-0f0d2970147d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "admin login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"admin@lms.com\",\r\n  \"password\": \"Admin@123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5001/api/v1/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5001",
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Notifications",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response success is true\", function () {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.success).to.eql(true);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "paste-valid-jwt-token-here",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5001/api/v1/notifications",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5001",
+          "path": [
+            "api",
+            "v1",
+            "notifications"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Mark All Notifications Read",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Notifications marked as read\", function () {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.success).to.eql(true);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "paste-valid-jwt-token-here",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5001/api/v1/notifications/mark-all-read",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5001",
+          "path": [
+            "api",
+            "v1",
+            "notifications",
+            "mark-all-read"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Student Enrollments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Enrollment data returned\", function () {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.success).to.eql(true);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "paste-valid-jwt-token-here",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5001/api/v1/enrollment/student/ed87eae7-a989-4b0d-842f-ac97a230f6bb",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5001",
+          "path": [
+            "api",
+            "v1",
+            "enrollment",
+            "student",
+            "ed87eae7-a989-4b0d-842f-ac97a230f6bb"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
