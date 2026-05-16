@@ -53,6 +53,11 @@ services:
       Jwt__Secret: "DEV_SECRET_CHANGE_IN_PRODUCTION_MUST_BE_32_CHARS_MIN"
       Jwt__Issuer: "lms-api"
       Jwt__Audience: "lms-frontend"
+      Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      Cloudinary__ApiKey: ${CLOUDINARY_API_KEY}
+      Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET}
+      Resend__ApiKey: ${RESEND_API_KEY}
+      Resend__FromEmail: ${RESEND_FROM_EMAIL}
     depends_on:
       postgres:
         condition: service_healthy

@@ -3,6 +3,7 @@ using LMS.Application.Interfaces;
 using LMS.Infrastructure.Data;
 using LMS.Infrastructure.Interfaces;
 using LMS.Infrastructure.Services;
+using LMS.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -104,6 +105,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddOptions<CloudinarySettings>().BindConfiguration("Cloudinary");
+        services.AddOptions<ResendSettings>().BindConfiguration("Resend");
+
+        services.AddScoped<IEmailService, EmailService>();
 
         // ── Worked example ────────────────────────────────────────────────────
         services.AddScoped<IAuthService, AuthService>();

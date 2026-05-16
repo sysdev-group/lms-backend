@@ -5,6 +5,7 @@ using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
 using LMS.Domain.Enums;
 using LMS.Infrastructure.Data;
+using LMS.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Infrastructure.Services;
@@ -19,13 +20,15 @@ public class UserService : IUserService
     private readonly IAuthService _authService;
     private readonly ICurrentUserService _currentUser;
     private readonly IAuditService _audit;
+    private readonly IEmailService _emailService;
 
-    public UserService(AppDbContext db, IAuthService authService, ICurrentUserService currentUser, IAuditService audit)
+    public UserService(AppDbContext db, IAuthService authService, ICurrentUserService currentUser, IAuditService audit, IEmailService emailService)
     {
         _db = db;
         _authService = authService;
         _currentUser = currentUser;
         _audit = audit;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -123,7 +126,13 @@ public class UserService : IUserService
         await _audit.LogAsync("Create", "User", user.Id.ToString(), _currentUser.UserId,
             _currentUser.Role.ToString(), null, $"User '{user.Email}' created with role {user.Role}", null, null);
 
-        // TODO: Send welcome email with password-reset link via IEmailService. See Section 22.
+        // TODO: replace with real token once PasswordResetTokens table is added
+        var resetLink = $"http://localhost:4200/auth/reset-password?token=welcome";
+        await _emailService.SendWelcomeEmailAsync(
+            user.Email,
+            $"{user.FirstName} {user.LastName}",
+            resetLink);
+
         return MapToDto(user);
     }
 

@@ -255,12 +255,27 @@ public class SubmissionsController : BaseController
         return ApiOk(result);
     }
 
-    /// <summary>Get all submissions for an assignment. Lecturer or Admin only.</summary>
+    /// <summary>Get all submissions for an assignment including Cloudinary file URLs. Lecturer or Admin only.</summary>
     [HttpGet("assignment/{assignmentId:guid}")]
     [Authorize(Roles = "Lecturer,Admin")]
     public async Task<IActionResult> GetByAssignment(Guid assignmentId)
     {
-        var result = await _submissionService.GetByAssignmentAsync(assignmentId);
+        var result = await _db.Submissions
+            .AsNoTracking()
+            .Where(s => s.AssignmentId == assignmentId)
+            .Select(s => new
+            {
+                id = s.Id,
+                studentId = s.StudentId,
+                studentName = s.Student.FirstName + " " + s.Student.LastName,
+                status = s.Status.ToString(),
+                submittedAt = s.SubmittedAt,
+                isLate = s.IsLate,
+                fileName = s.File != null ? s.File.OriginalName : null,
+                fileUrl = s.File != null ? s.File.Path : null,
+                isGraded = s.Grade != null,
+            })
+            .ToListAsync();
         return ApiOk(result);
     }
 

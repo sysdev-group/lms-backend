@@ -6,6 +6,7 @@ using LMS.Application.DTOs.Auth;
 using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
 using LMS.Infrastructure.Data;
+using LMS.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -26,13 +27,15 @@ public class AuthService : IAuthService
     private readonly IConfiguration _config;
     private readonly IAuditService _audit;
     private readonly ICurrentUserService _currentUser;
+    private readonly IEmailService _emailService;
 
-    public AuthService(AppDbContext db, IConfiguration config, IAuditService audit, ICurrentUserService currentUser)
+    public AuthService(AppDbContext db, IConfiguration config, IAuditService audit, ICurrentUserService currentUser, IEmailService emailService)
     {
         _db = db;
         _config = config;
         _audit = audit;
         _currentUser = currentUser;
+        _emailService = emailService;
     }
 
     /// <inheritdoc />
@@ -116,10 +119,12 @@ public class AuthService : IAuthService
 
         if (user is null) return;
 
-        // TODO: Generate reset token, store it, send email via IEmailService
-        // Pattern: generate GUID token, hash it, store hash with 30-min expiry, email raw token
-        // See Section 29 of system documentation for full spec
-        await Task.CompletedTask;
+        // TODO: add PasswordResetTokens table, then generate + hash a real GUID token here
+        var resetLink = $"http://localhost:4200/auth/reset-password?token=placeholder";
+        await _emailService.SendPasswordResetEmailAsync(
+            user.Email,
+            $"{user.FirstName} {user.LastName}",
+            resetLink);
     }
 
     /// <inheritdoc />
