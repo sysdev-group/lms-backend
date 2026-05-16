@@ -47,11 +47,18 @@ Request definitions, Postman scripts, authorization configuration, and environme
 | `PATCH {{baseUrl}}/notifications/mark-all-read` | Returns `200 OK` after marking all notifications as read for the authenticated user. Tests confirm the successful update. |
 | `GET {{baseUrl}}/enrollment/student/{{studentId}}` | Returns `200 OK` with enrollment records for the selected student. Tests confirm enrollment data is returned successfully. |
 
-## Screenshot Checklist
+## Screenshot Evidence
 
-Capture these screenshots for the report:
+The screenshots below show successful API responses and Postman Test Results with passing assertions.
 
-1. `GET /notifications` successful response.
-2. `PATCH /notifications/mark-all-read` successful response.
-3. `GET /enrollment/student/{studentId}` successful response.
-4. Postman test results tab showing tests passed.
+### GET `/notifications`
+
+![GET Notifications](notification-enrollment-screenshots/get-notifications.png)
+
+### PATCH `/notifications/mark-all-read`
+
+![PATCH Mark All Notifications Read](notification-enrollment-screenshots/mark-all-read.png)
+
+### GET `/enrollment/student/{studentId}`
+
+![GET Student Enrollments](notification-enrollment-screenshots/get-student-enrollments.png)
