@@ -83,6 +83,19 @@ public class UsersController : BaseController
         await _userService.DeactivateUserAsync(id);
         return ApiNoContent();
     }
+
+    /// <summary>Bulk-import users from a CSV file. Admin only.</summary>
+    [HttpPost("bulk-import")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkImport(IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("No file uploaded.");
+
+        using var stream = file.OpenReadStream();
+        var result = await _userService.BulkImportAsync(stream);
+        return ApiOk(result);
+    }
 }
 
 // ─── COURSES ──────────────────────────────────────────────────────────────────
